@@ -14,3 +14,10 @@
   and specific to the daily planner.
 - Tool access and schema enforcement are technical controls; conversational
   agreement is a skill rule and will be reported separately from hook tests.
+
+## Stage 03 — synthetic sources
+- Parsed both JSON files and verified unique record IDs.
+- Academic data: three MPCS courses, five classes, seven tasks.
+- Jobs: five fictional companies, two interviews, five preparation/follow-up tasks.
+- November 9–15, 2026 sample week includes a Thursday interview/class conflict.
+- Generated directory has no fabricated user-confirmed plan.

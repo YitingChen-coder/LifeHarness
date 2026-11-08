@@ -1,0 +1,109 @@
+{
+  "label": "SWE job search tracker",
+  "synthetic": true,
+  "timezone": "America/Chicago",
+  "applications": [
+    {
+      "id": "app-northstar",
+      "company": "Northstar Labs",
+      "role": "Software Engineer \u00b7 New Grad",
+      "status": "interviewing",
+      "appliedOn": "2026-10-28"
+    },
+    {
+      "id": "app-orbit",
+      "company": "Orbit Systems",
+      "role": "Backend Engineer",
+      "status": "applied",
+      "appliedOn": "2026-11-02"
+    },
+    {
+      "id": "app-cedar",
+      "company": "Cedar Analytics",
+      "role": "Software Engineer",
+      "status": "screening",
+      "appliedOn": "2026-11-04"
+    },
+    {
+      "id": "app-lumen",
+      "company": "Lumen Works",
+      "role": "Platform Engineer",
+      "status": "applied",
+      "appliedOn": "2026-11-06"
+    },
+    {
+      "id": "app-atlas",
+      "company": "Atlas Studio",
+      "role": "Full-stack Engineer",
+      "status": "rejected",
+      "appliedOn": "2026-10-20"
+    }
+  ],
+  "interviews": [
+    {
+      "id": "interview-northstar",
+      "applicationId": "app-northstar",
+      "title": "Northstar \u00b7 technical interview",
+      "start": "2026-11-11T14:00:00-06:00",
+      "end": "2026-11-11T15:00:00-06:00",
+      "location": "Video call",
+      "kind": "interview"
+    },
+    {
+      "id": "interview-cedar",
+      "applicationId": "app-cedar",
+      "title": "Cedar \u00b7 recruiter conversation",
+      "start": "2026-11-12T14:00:00-06:00",
+      "end": "2026-11-12T14:30:00-06:00",
+      "location": "Video call",
+      "kind": "interview"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "prep-northstar",
+      "applicationId": "app-northstar",
+      "title": "Practice graphs for Northstar interview",
+      "due": "2026-11-10T18:00:00-06:00",
+      "durationMinutes": 60,
+      "kind": "prep",
+      "status": "pending"
+    },
+    {
+      "id": "prep-stories",
+      "applicationId": "app-northstar",
+      "title": "Rehearse two STAR stories",
+      "due": "2026-11-11T12:00:00-06:00",
+      "durationMinutes": 30,
+      "kind": "prep",
+      "status": "pending"
+    },
+    {
+      "id": "follow-orbit",
+      "applicationId": "app-orbit",
+      "title": "Send application follow-up to Orbit",
+      "due": "2026-11-10T17:00:00-06:00",
+      "durationMinutes": 15,
+      "kind": "follow-up",
+      "status": "pending"
+    },
+    {
+      "id": "prep-cedar",
+      "applicationId": "app-cedar",
+      "title": "Review Cedar role & prepare questions",
+      "due": "2026-11-11T18:00:00-06:00",
+      "durationMinutes": 30,
+      "kind": "prep",
+      "status": "pending"
+    },
+    {
+      "id": "apply-lumen",
+      "applicationId": "app-lumen",
+      "title": "Tailor portfolio for Lumen",
+      "due": "2026-11-13T18:00:00-06:00",
+      "durationMinutes": 45,
+      "kind": "application",
+      "status": "pending"
+    }
+  ]
+}

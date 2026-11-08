@@ -1,0 +1,138 @@
+{
+  "label": "Academic calendar & tasks",
+  "synthetic": true,
+  "timezone": "America/Chicago",
+  "weekOf": "2026-11-09",
+  "courses": [
+    {
+      "id": "course-dbs",
+      "code": "MPCS 51238",
+      "name": "Design, Build, Ship",
+      "color": "blue"
+    },
+    {
+      "id": "course-algo",
+      "code": "MPCS 55001",
+      "name": "Algorithms",
+      "color": "purple"
+    },
+    {
+      "id": "course-systems",
+      "code": "MPCS 51082",
+      "name": "Systems Programming",
+      "color": "teal"
+    }
+  ],
+  "events": [
+    {
+      "id": "class-dbs-tue",
+      "title": "Design, Build, Ship",
+      "start": "2026-11-10T17:30:00-06:00",
+      "end": "2026-11-10T18:50:00-06:00",
+      "location": "John Crerar Library",
+      "kind": "class",
+      "courseId": "course-dbs"
+    },
+    {
+      "id": "class-algo-mon",
+      "title": "Algorithms",
+      "start": "2026-11-09T10:30:00-06:00",
+      "end": "2026-11-09T11:50:00-06:00",
+      "location": "John Crerar Library",
+      "kind": "class",
+      "courseId": "course-algo"
+    },
+    {
+      "id": "class-algo-wed",
+      "title": "Algorithms",
+      "start": "2026-11-11T10:30:00-06:00",
+      "end": "2026-11-11T11:50:00-06:00",
+      "location": "John Crerar Library",
+      "kind": "class",
+      "courseId": "course-algo"
+    },
+    {
+      "id": "class-systems-tue",
+      "title": "Systems Programming",
+      "start": "2026-11-10T13:30:00-06:00",
+      "end": "2026-11-10T14:50:00-06:00",
+      "location": "John Crerar Library",
+      "kind": "class",
+      "courseId": "course-systems"
+    },
+    {
+      "id": "class-systems-thu",
+      "title": "Systems Programming",
+      "start": "2026-11-12T13:30:00-06:00",
+      "end": "2026-11-12T14:50:00-06:00",
+      "location": "John Crerar Library",
+      "kind": "class",
+      "courseId": "course-systems"
+    }
+  ],
+  "tasks": [
+    {
+      "id": "task-lifeharness",
+      "title": "Record & submit LifeHarness demo",
+      "courseId": "course-dbs",
+      "due": "2026-11-10T17:30:00-06:00",
+      "durationMinutes": 90,
+      "kind": "assignment",
+      "status": "pending"
+    },
+    {
+      "id": "task-algo",
+      "title": "Problem set 4 \u00b7 dynamic programming",
+      "courseId": "course-algo",
+      "due": "2026-11-11T23:59:00-06:00",
+      "durationMinutes": 120,
+      "kind": "assignment",
+      "status": "pending"
+    },
+    {
+      "id": "task-systems",
+      "title": "Memory allocator lab",
+      "courseId": "course-systems",
+      "due": "2026-11-13T17:00:00-06:00",
+      "durationMinutes": 150,
+      "kind": "assignment",
+      "status": "pending"
+    },
+    {
+      "id": "task-reading",
+      "title": "Review greedy algorithm proofs",
+      "courseId": "course-algo",
+      "due": "2026-11-10T18:00:00-06:00",
+      "durationMinutes": 45,
+      "kind": "study",
+      "status": "pending"
+    },
+    {
+      "id": "task-leetcode",
+      "title": "LeetCode \u00b7 graphs & BFS",
+      "courseId": "course-algo",
+      "due": "2026-11-10T18:00:00-06:00",
+      "durationMinutes": 45,
+      "kind": "practice",
+      "status": "pending"
+    },
+    {
+      "id": "task-lab-review",
+      "title": "Review allocator test failures",
+      "courseId": "course-systems",
+      "due": "2026-11-12T18:00:00-06:00",
+      "durationMinutes": 60,
+      "kind": "study",
+      "status": "pending"
+    },
+    {
+      "id": "task-week-review",
+      "title": "Weekly notes & course review",
+      "courseId": "course-dbs",
+      "due": "2026-11-15T18:00:00-06:00",
+      "durationMinutes": 30,
+      "kind": "study",
+      "status": "pending"
+    }
+  ]
+}
