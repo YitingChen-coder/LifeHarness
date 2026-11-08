@@ -46,3 +46,12 @@
 - Approved whole-file plan/notes payloads pass; protected file hashes stay unchanged.
 - Wildcard PreToolUse uses onFailure:block (supported since Claude Code 2.1.295).
 - Edit is intentionally blocked: complete JSON must be validated before each write.
+
+## Stage 07 — read-only API and polling
+- Test-first store tests failed before store.ts existed; all nine tests now pass.
+- Store re-reads saved files, rejects symlinks and invalid/traversal dates, distinguishes
+  no plan from bad plan, and preserves usable sources when another source is invalid.
+- Live GET /api/dashboard?date=2026-11-10 returned 200 with three courses and no plan;
+  impossible date returned 400; POST returned 405.
+- Client polls every three seconds, aborts stalled reads, retains last good content
+  and labels read/connection warnings. Browser behavior will be checked in stage 09.
