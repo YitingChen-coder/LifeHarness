@@ -37,3 +37,12 @@
 - Skill has discoverable trigger metadata, 1–2 questions and explicit save agreement.
 - Static contract verified here; actual /context and model behavior deferred to
   stage 09, not claimed as passed. Launcher intentionally requires stage 06 hook.
+
+## Stage 06 — source protection
+- Test-first security suite failed before hook modules existed; seven tests now pass.
+- Hook subprocess denies malformed input and an actual source Write payload.
+- Policy tests cover source/config/app writes, traversal, symlink target and parent,
+  hard links, unknown tools, incomplete/invalid plans and unknown references.
+- Approved whole-file plan/notes payloads pass; protected file hashes stay unchanged.
+- Wildcard PreToolUse uses onFailure:block (supported since Claude Code 2.1.295).
+- Edit is intentionally blocked: complete JSON must be validated before each write.

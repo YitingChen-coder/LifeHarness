@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": ["Read", "Glob", "Grep", "Skill(morning-check-in)", "Write"],
+    "deny": ["Bash", "Agent", "Task", "NotebookEdit", "WebFetch", "WebSearch"]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": ["${CLAUDE_PROJECT_DIR}/scripts/protect-data.mjs"],
+            "timeout": 10,
+            "onFailure": "block"
+          }
+        ]
+      }
+    ]
+  }
+}
