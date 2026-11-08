@@ -28,3 +28,12 @@
   date traversal/impossible dates, Chicago DST boundaries, confirmation field,
   task overlap/lunch/window and structured notes. TypeScript passed.
 - AGENTS.md remains short; longer planning and output contracts load on demand.
+
+## Stage 05 — morning skill and launcher
+- Test-first launcher check failed before implementation; now five tests pass.
+- Launcher rejects arbitrary CLI switches, validates demo dates, explicitly appends
+  AGENTS.md and exposes only Read/Glob/Grep/Write/Edit/Skill; MCP servers disabled.
+- Claude Code 2.1.312 is installed and logged in. Runtime requires >=2.1.295.
+- Skill has discoverable trigger metadata, 1–2 questions and explicit save agreement.
+- Static contract verified here; actual /context and model behavior deferred to
+  stage 09, not claimed as passed. Launcher intentionally requires stage 06 hook.
