@@ -21,3 +21,10 @@
 - Jobs: five fictional companies, two interviews, five preparation/follow-up tasks.
 - November 9–15, 2026 sample week includes a Thursday interview/class conflict.
 - Generated directory has no fabricated user-confirmed plan.
+
+## Stage 04 — context and contracts
+- Test-first: schema suite initially failed because schema/date modules were absent.
+- Four behavior tests now pass: valid fixtures, duplicate/dangling source records,
+  date traversal/impossible dates, Chicago DST boundaries, confirmation field,
+  task overlap/lunch/window and structured notes. TypeScript passed.
+- AGENTS.md remains short; longer planning and output contracts load on demand.
