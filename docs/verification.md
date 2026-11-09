@@ -160,3 +160,15 @@
   file, focus timing, protected sources, job drawer and continued Claude confirmation.
 - All reviewer P2 findings fixed with regressions. P3: minor source/fallback-font and
   icon-size differences documented in design-qa.md; no remaining blocker.
+
+## Homepage addition
+
+- Added a dedicated / homepage with a prominent LifeHarness title, brief product
+  introduction, actual board preview, workspace/sample-day links and feature summary.
+- Moved the interactive workspace to /board. Brand navigation returns home; legacy
+  /?date=YYYY-MM-DD URLs redirect to /board without losing a valid selected date.
+- Added a failing homepage-navigation test before implementation. Eight browser
+  tests passed, including entry/back/sample/legacy routes and homepage widths
+  320/390/768/1487px. Desktop/phone screenshots inspected; no page errors observed.
+- Final type generation, TypeScript, 24 unit tests, production build, formatting and
+  diff check passed. Protected source files and user progress were not changed.

@@ -153,7 +153,7 @@ export default function Dashboard() {
         Skip to task board
       </a>
       <aside className="icon-rail">
-        <a href="#main" className="app-logo" aria-label="LifeHarness home">
+        <a href="/" className="app-logo" aria-label="LifeHarness home">
           <Activity size={30} />
         </a>
         <nav aria-label="Workspace">
@@ -203,7 +203,7 @@ export default function Dashboard() {
       </aside>
       <div className="board-workspace">
         <header className="workspace-header">
-          <a className="wordmark" href="#main">
+          <a className="wordmark" href="/">
             LifeHarness<span>.</span>
           </a>
           <span className="header-separator" />

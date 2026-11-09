@@ -7,7 +7,7 @@ Move work through To do, In progress and Done on a focused task board.
 Claude Code helps you plan; the schedule drawer shows the day you confirm.
 Original calendar and job-search data stay protected.
 
-![LifeHarness sample day dashboard](docs/images/dashboard.png)
+![LifeHarness homepage](docs/images/home.png)
 
 ## Start locally
 
@@ -23,7 +23,9 @@ npm ci
 npm run dev
 ```
 
-Open **http://127.0.0.1:3000**. In a second terminal in the same folder:
+Open **http://127.0.0.1:3000** for the homepage, then choose **Open task board**.
+The workspace is also available directly at **http://127.0.0.1:3000/board**.
+In a second terminal in the same folder:
 
 ```bash
 npm run planner
@@ -45,7 +47,7 @@ week is November 9–15, 2026. A fresh checkout contains no preconfirmed plan.
 The dashboard defaults to the real current date in **America/Chicago**.
 
 1. Click **Sample day** in the dashboard (November 10), or open
-   http://127.0.0.1:3000/?date=2026-11-10.
+   http://127.0.0.1:3000/board?date=2026-11-10.
 2. Start `npm run planner:demo` in your terminal.
 3. Say “Good morning”, answer the questions and confirm the displayed plan.
 4. Open **Schedule** to see confirmed priorities and time blocks. The board shows
@@ -128,7 +130,7 @@ Development and Git commands run in a separate developer terminal.
 | `npm test`                   | Schema, dates/DST, storage, state retention, policy and launcher tests                                       |
 | `npm run test:safety`        | Run the actual hook process with a simulated forbidden Write; verify source SHA-256 unchanged; no model cost |
 | `npm run test:hook:live`     | Optional real Claude Read→Write test in a disposable fixture; budget capped at $0.75                         |
-| `npm run test:e2e`           | Build and run seven headless browser tests against a production server on port 3100                          |
+| `npm run test:e2e`           | Build and run eight headless browser tests against a production server on port 3100                          |
 | `npm run check`              | Generate types, typecheck, unit tests and production build                                                   |
 | `npm run format:check`       | Check source/document formatting                                                                             |
 | `npm run build && npm start` | Production local dashboard                                                                                   |
@@ -160,7 +162,7 @@ data/sources/              Protected academic.json and jobs.json
 data/generated/            Local YYYY-MM-DD.json plans and notes.json
 data/user/                 Human-owned task-state.json progress
 scripts/                   Restricted launcher and safety checks
-src/app/                   Dashboard and read-only GET /api/dashboard
+src/app/                   Homepage, /board workspace and dashboard/task APIs
 src/lib/                   Schemas, Chicago dates, store, view/state helpers
 tests/                     Unit/security and browser integration tests
 docs/                      Architecture, evidence and demo instructions
@@ -198,3 +200,6 @@ retain the last valid in-browser plan. No plan is displayed as confirmed on firs
 No deployment is needed. For the assignment, record the dashboard and Claude Code
 side by side, post the 3–5 minute recording yourself in class Slack's `#general`,
 and submit that post's link in Classroom. This project does not post or submit for you.
+
+The homepage includes product context, an actual board preview and direct workspace/
+sample-day links. Legacy root links with a valid date redirect to /board with that date.

@@ -7,7 +7,7 @@ AI output. If model latency is high, shorten narration rather than skip confirma
 ## Before recording
 
 - `npm ci`; run `npm run check` and `npm run test:safety`.
-- Start `npm run dev`. Open http://127.0.0.1:3000/?date=2026-11-10.
+- Start `npm run dev`. Open http://127.0.0.1:3000/board?date=2026-11-10.
 - Start `npm run planner:demo` in a second terminal and resolve its first-run
   workspace trust dialog after reviewing settings.
 - Choose a fresh demo plan state. If you have an earlier plan/notes, back them up

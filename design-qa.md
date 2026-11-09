@@ -68,3 +68,12 @@
   differs from the local fallback. Current body/task sizes remain readable.
 - The reference omits date shortcuts, error states, timer reset and selectors;
   those useful controls are retained with restrained hierarchy.
+
+## Homepage addition
+
+The requested title homepage uses the existing violet/charcoal brand language, a
+large LifeHarness heading, explanatory copy, real-board screenshot and clear
+workspace/sample-day links. Desktop capture: docs/images/home.png. Phone capture
+was inspected after image decoding at 390x844; no duplicate DOM, clipping or page
+overflow. Homepage navigation and 320/390/768/1487px layouts pass browser coverage.
+Task board is now /board; old root date links redirect without losing the date.

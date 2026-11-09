@@ -22,7 +22,7 @@ test('kanban is readable, all tasks searchable, filters and schedule work across
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.goto('/?date=2026-11-10');
+  await page.goto('/board?date=2026-11-10');
   await expect(
     page.getByRole('heading', { name: 'Task board', exact: true }),
   ).toBeVisible();
@@ -65,7 +65,7 @@ test('manual states persist across reload and drag-drop without altering sources
   page,
 }) => {
   const before = hash();
-  await page.goto('/?date=2026-11-10');
+  await page.goto('/board?date=2026-11-10');
   const task = page.getByRole('article', {
     name: 'Record & submit LifeHarness demo',
     exact: true,
@@ -116,7 +116,7 @@ test('focus timer can start pause reset and retain time after reload', async ({
   page,
 }) => {
   await page.clock.install({ time: new Date('2026-11-10T15:00:00Z') });
-  await page.goto('/?date=2026-11-10');
+  await page.goto('/board?date=2026-11-10');
   await page.getByRole('button', { name: 'Start focus', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Pause focus', exact: true }),
@@ -155,7 +155,7 @@ test('confirmed plans refresh, invalid reads and connection failures retain last
   };
   try {
     if (existsSync(file)) unlinkSync(file);
-    await page.goto('/?date=2026-11-15');
+    await page.goto('/board?date=2026-11-15');
     await expect(
       page.getByText('No confirmed plan', { exact: true }),
     ).toBeVisible();
@@ -189,7 +189,7 @@ test('source errors retain tasks and dialogs trap and restore keyboard focus', a
   page,
   request,
 }) => {
-  await page.goto('/?date=2026-11-10');
+  await page.goto('/board?date=2026-11-10');
   await expect(page.getByRole('article')).toHaveCount(12);
   const original = await (
     await request.get('/api/dashboard?date=2026-11-10')
@@ -228,7 +228,7 @@ test('source errors retain tasks and dialogs trap and restore keyboard focus', a
 test('job tracker keeps application statuses and upcoming interviews accessible', async ({
   page,
 }) => {
-  await page.goto('/?date=2026-11-10');
+  await page.goto('/board?date=2026-11-10');
   await expect(
     page.getByRole('button', { name: 'Open job tracker', exact: true }),
   ).toBeVisible({ timeout: 1000 });
@@ -246,7 +246,7 @@ test('job tracker keeps application statuses and upcoming interviews accessible'
 test('failed status save leaves the task unchanged and shows a recoverable error', async ({
   page,
 }) => {
-  await page.goto('/?date=2026-11-10');
+  await page.goto('/board?date=2026-11-10');
   await page.route('**/api/tasks', (route) =>
     route.fulfill({
       status: 500,
@@ -269,4 +269,36 @@ test('failed status save leaves the task unchanged and shows a recoverable error
       exact: true,
     }),
   ).toBeVisible();
+});
+test('homepage introduces LifeHarness and enters the board with working back navigation', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await expect(
+    page.getByRole('heading', { name: 'LifeHarness.', exact: true }),
+  ).toBeVisible({ timeout: 1000 });
+  await page
+    .getByRole('link', { name: 'Open task board', exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/board$/);
+  await expect(
+    page.getByRole('heading', { name: 'Task board', exact: true }),
+  ).toBeVisible();
+  await page
+    .getByRole('link', { name: 'LifeHarness home', exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/$/);
+  await page.getByRole('link', { name: 'Try sample day', exact: true }).click();
+  await expect(page).toHaveURL(/\/board\?date=2026-11-10$/);
+  await page.goto('/?date=2026-11-12');
+  await expect(page).toHaveURL(/\/board\?date=2026-11-12$/);
+  await page.goto('/');
+  for (const width of [1487, 768, 390, 320]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth <= innerWidth,
+      ),
+    ).toBe(true);
+  }
 });
