@@ -1,5 +1,12 @@
 import { randomUUID } from 'node:crypto';
-import { readFile, lstat, writeFile, rename, rm } from 'node:fs/promises';
+import {
+  realpath,
+  readFile,
+  lstat,
+  writeFile,
+  rename,
+  rm,
+} from 'node:fs/promises';
 import { join } from 'node:path';
 import { z } from 'zod';
 import { planSchema, notesSchema, type Plan } from './schema';
