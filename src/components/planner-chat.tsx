@@ -10,10 +10,18 @@ import {
   TriangleAlert,
   X,
 } from 'lucide-react';
-import type { PlannerSnapshot } from '@/lib/web-planner';
+import type { PlannerSnapshot, DraftPreview } from '@/lib/web-planner';
 import { dateLabel, timeLabel } from '@/lib/dates';
 type Connection = { ready: boolean; provider: string; message: string };
-export function PlannerChat({ date }: { date: string }) {
+export function PlannerChat({
+  date,
+  onDraftChange,
+  onSaved,
+}: {
+  date: string;
+  onDraftChange?: (draft: DraftPreview | null) => void;
+  onSaved?: () => void;
+}) {
   const [state, setState] = useState<PlannerSnapshot | null>(null);
   const [connection, setConnection] = useState<Connection | null>(null);
   const [text, setText] = useState('');
@@ -24,6 +32,9 @@ export function PlannerChat({ date }: { date: string }) {
   const history = useRef<HTMLDivElement>(null);
   const generation = useRef(0);
   const busy = sending || !!state?.busy;
+  useEffect(() => {
+    onDraftChange?.(state?.draft ?? null);
+  }, [state?.draft, onDraftChange]);
   useEffect(() => {
     let active = true;
     let inFlight = false;
@@ -98,6 +109,7 @@ export function PlannerChat({ date }: { date: string }) {
         throw new Error(body.error ?? 'Planner request failed.');
       }
       setState(body);
+      if (action === 'confirm' && body.saved) onSaved?.();
       if (action === 'message') setText('');
     } catch (e) {
       setError(
@@ -142,11 +154,14 @@ export function PlannerChat({ date }: { date: string }) {
         </span>
         <ShieldCheck size={15} />
       </div>
-      <p className="planner-account-note">
-        {connection?.message ??
-          'Uses your local Codex ChatGPT login. No API key required.'}{' '}
-        This is a separate planning conversation.
-      </p>
+      <details className="planner-privacy">
+        <summary>Account & privacy</summary>
+        <p>
+          {connection?.message ??
+            'Uses your local Codex ChatGPT login. No API key required.'}{' '}
+          This is a separate planning conversation.
+        </p>
+      </details>
       {loading && (
         <p className="planner-working" role="status">
           <Loader2 size={16} className="spin" />
@@ -171,131 +186,137 @@ export function PlannerChat({ date }: { date: string }) {
           </div>
         </div>
       )}
-      <div
-        ref={history}
-        className="planner-history"
-        role="log"
-        aria-label="Planning conversation"
-        aria-live="polite"
-      >
-        {!state?.messages.length && !loading && (
-          <div className="planner-welcome">
-            <span className="modal-symbol">
-              <Sparkles size={25} />
-            </span>
-            <h3>A clearer day starts here.</h3>
-            <p>
-              Tell me how you’re feeling. I’ll help shape a day around your
-              deadlines and fixed commitments.
-            </p>
-            <div className="planner-prompts">
-              {['Good morning', 'Plan my day'].map((prompt) => (
-                <button
-                  className="quiet-btn"
-                  key={prompt}
-                  disabled={!ready || busy}
-                  onClick={() => void act('message', prompt)}
-                >
-                  {prompt}
-                  <Sparkles size={14} />
-                </button>
-              ))}
+      <div className="planner-scroll" ref={history}>
+        <div
+          className="planner-history"
+          role="log"
+          aria-label="Planning conversation"
+          aria-live="polite"
+        >
+          {!state?.messages.length && !loading && (
+            <div className="planner-welcome">
+              <span className="modal-symbol">
+                <Sparkles size={25} />
+              </span>
+              <h3>A clearer day starts here.</h3>
+              <p>
+                Tell me how you’re feeling. I’ll help shape a day around your
+                deadlines and fixed commitments.
+              </p>
+              <div className="planner-prompts">
+                {['Good morning', 'Plan my day'].map((prompt) => (
+                  <button
+                    className="quiet-btn"
+                    key={prompt}
+                    disabled={!ready || busy}
+                    onClick={() => void act('message', prompt)}
+                  >
+                    {prompt}
+                    <Sparkles size={14} />
+                  </button>
+                ))}
+              </div>
             </div>
+          )}
+          {state?.messages.map((message, i) => (
+            <div key={i} className={`chat-message ${message.role}`}>
+              <span className="chat-speaker">
+                {message.role === 'user' ? 'You' : 'Codex'}
+              </span>
+              <p>{message.text}</p>
+            </div>
+          ))}
+          {busy && (
+            <p className="planner-working" role="status">
+              <Loader2 size={17} className="spin" />
+              Codex is planning with your tasks and schedule…
+            </p>
+          )}
+        </div>
+        {error && (
+          <div className="planner-error" role="alert">
+            <TriangleAlert size={17} />
+            <p>{error}</p>
           </div>
         )}
-        {state?.messages.map((message, i) => (
-          <div key={i} className={`chat-message ${message.role}`}>
-            <span className="chat-speaker">
-              {message.role === 'user' ? 'You' : 'Codex'}
-            </span>
-            <p>{message.text}</p>
-          </div>
-        ))}
-        {busy && (
-          <p className="planner-working" role="status">
-            <Loader2 size={17} className="spin" />
-            Codex is planning with your tasks and schedule…
+        {state?.warning && (
+          <p className="planner-error" role="status">
+            {state.warning}
           </p>
+        )}
+        {state?.saved && (
+          <p className="planner-saved" role="status">
+            <Check size={17} />
+            Confirmed plan saved. Your board updates automatically.
+          </p>
+        )}
+        {state?.draft && (
+          <section className="planner-proposal" aria-label="Proposed plan">
+            <div className="proposal-heading">
+              <span className="eyebrow">PROPOSED · NOT SAVED</span>
+              <ShieldCheck size={17} />
+            </div>
+            <h3>{state.draft.plan.summary}</h3>
+            <ol className="proposal-priorities">
+              {state.draft.plan.priorities.map((p) => (
+                <li key={p.id}>
+                  <strong>{p.title}</strong>
+                  <span>{p.reason}</span>
+                </li>
+              ))}
+            </ol>
+            <details className="proposal-schedule">
+              <summary>
+                View {state.draft.plan.blocks.length} time blocks on this plan
+              </summary>
+              <div className="proposal-blocks">
+                {state.draft.plan.blocks.map((block) => (
+                  <div key={block.id}>
+                    <time>
+                      {timeLabel(block.start)}–{timeLabel(block.end)}
+                    </time>
+                    <span>
+                      {block.title}
+                      <small>{block.kind}</small>
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </details>
+            <details className="proposal-memory">
+              <summary>Cross-day notes to save</summary>
+              <ul>
+                {state.draft.reflections.map((note, i) => (
+                  <li key={i}>{note}</li>
+                ))}
+              </ul>
+              <p>{state.draft.carryOver.length} carry-over tasks</p>
+            </details>
+            <div className="proposal-actions">
+              <button
+                className="quiet-btn"
+                disabled={busy}
+                onClick={() => void act('discard')}
+              >
+                <X size={16} />
+                Don’t save
+              </button>
+              <button
+                className="primary-btn"
+                disabled={busy}
+                onClick={() => void act('confirm')}
+              >
+                <Check size={17} />
+                Confirm & save
+              </button>
+            </div>
+            <p className="planner-account-note">
+              Only this button saves the displayed plan and notes. To revise,
+              send a message below.
+            </p>
+          </section>
         )}
       </div>
-      {error && (
-        <div className="planner-error" role="alert">
-          <TriangleAlert size={17} />
-          <p>{error}</p>
-        </div>
-      )}
-      {state?.warning && (
-        <p className="planner-error" role="status">
-          {state.warning}
-        </p>
-      )}
-      {state?.saved && (
-        <p className="planner-saved" role="status">
-          <Check size={17} />
-          Confirmed plan saved. Your board updates automatically.
-        </p>
-      )}
-      {state?.draft && (
-        <section className="planner-proposal" aria-label="Proposed plan">
-          <div className="proposal-heading">
-            <span className="eyebrow">PROPOSED · NOT SAVED</span>
-            <ShieldCheck size={17} />
-          </div>
-          <h3>{state.draft.plan.summary}</h3>
-          <ol className="proposal-priorities">
-            {state.draft.plan.priorities.map((p) => (
-              <li key={p.id}>
-                <strong>{p.title}</strong>
-                <span>{p.reason}</span>
-              </li>
-            ))}
-          </ol>
-          <div className="proposal-blocks">
-            {state.draft.plan.blocks.map((block) => (
-              <div key={block.id}>
-                <time>
-                  {timeLabel(block.start)}–{timeLabel(block.end)}
-                </time>
-                <span>
-                  {block.title}
-                  <small>{block.kind}</small>
-                </span>
-              </div>
-            ))}
-          </div>
-          <details className="proposal-memory">
-            <summary>Cross-day notes to save</summary>
-            <ul>
-              {state.draft.reflections.map((note, i) => (
-                <li key={i}>{note}</li>
-              ))}
-            </ul>
-            <p>{state.draft.carryOver.length} carry-over tasks</p>
-          </details>
-          <div className="proposal-actions">
-            <button
-              className="quiet-btn"
-              disabled={busy}
-              onClick={() => void act('discard')}
-            >
-              <X size={16} />
-              Don’t save
-            </button>
-            <button
-              className="primary-btn"
-              disabled={busy}
-              onClick={() => void act('confirm')}
-            >
-              <Check size={17} />
-              Confirm & save
-            </button>
-          </div>
-          <p className="planner-account-note">
-            Only this button saves the displayed plan and notes. To revise, send
-            a message below.
-          </p>
-        </section>
-      )}
       <form
         className="planner-composer"
         onSubmit={(e) => {

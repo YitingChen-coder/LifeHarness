@@ -115,3 +115,127 @@ test('overlapping events use separate lanes and a later nonoverlapping event reg
   assert.equal(result[2].lanes, 1);
   assert.equal(result[0].startMinute, 780);
 });
+test('week API loads confirmed plans across all seven days and rejects unbounded or invalid dates', async () => {
+  const { GET } = await import('../src/app/api/calendar/route');
+  const { mkdtempSync, mkdirSync, cpSync, writeFileSync, rmSync } =
+    await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const original = process.cwd();
+  const root = mkdtempSync(join(tmpdir(), 'lifeharness-calendar-api-'));
+  try {
+    cpSync(join(original, 'data/sources'), join(root, 'data/sources'), {
+      recursive: true,
+    });
+    mkdirSync(join(root, 'data/generated'));
+    process.chdir(root);
+    for (const date of ['2026-11-09', '2026-11-10']) {
+      const day = await loadDashboard(root, date);
+      const blocks = [
+        ...(day.academic?.events ?? []),
+        ...(day.jobs?.interviews ?? []),
+      ]
+        .filter((e) => e.start.startsWith(date))
+        .map((e, i) => ({
+          id: 'fixed-' + i,
+          sourceId: e.id,
+          title: e.title,
+          start: e.start,
+          end: e.end,
+          kind: e.kind,
+          status: 'pending',
+        }));
+      writeFileSync(
+        join(root, `data/generated/${date}.json`),
+        JSON.stringify({
+          date,
+          timezone: 'America/Chicago',
+          confirmed: true,
+          confirmedAt: '2026-11-09T08:00:00-06:00',
+          summary: 'Confirmed ' + date,
+          priorities: [],
+          blocks,
+        }),
+      );
+    }
+    const response = await GET(
+      new Request('http://localhost:3000/api/calendar?date=2026-11-10'),
+    );
+    assert.equal(response.status, 200);
+    const week = await response.json();
+    assert.equal(week.start, '2026-11-09');
+    assert.equal(week.days.length, 7);
+    assert.equal(week.days[0].plan.summary, 'Confirmed 2026-11-09');
+    assert.equal(week.days[1].plan.summary, 'Confirmed 2026-11-10');
+    assert.equal(
+      (
+        await GET(
+          new Request('http://localhost:3000/api/calendar?date=2026-02-30'),
+        )
+      ).status,
+      400,
+    );
+    assert.equal(
+      (await GET(new Request('http://evil.test/api/calendar'))).status,
+      403,
+    );
+  } finally {
+    process.chdir(original);
+    rmSync(root, { recursive: true, force: true });
+  }
+});
+test('scheduled task progress follows latest manual and confirmed completion, without treating a draft as a saved completion', async () => {
+  const day = await loadDashboard(process.cwd(), '2026-11-09');
+  const plan = {
+    date: day.date,
+    timezone: 'America/Chicago' as const,
+    confirmed: true as const,
+    confirmedAt: '2026-11-09T08:00:00-06:00',
+    summary: 'Study',
+    priorities: [],
+    blocks: [
+      {
+        id: 'focus',
+        sourceId: 'task-algo',
+        title: 'Study',
+        start: '2026-11-09T09:00:00-06:00',
+        end: '2026-11-09T10:00:00-06:00',
+        kind: 'task' as const,
+        status: 'pending' as const,
+      },
+    ],
+  };
+  const state = (status: 'done' | 'todo') => ({
+    version: 1 as const,
+    tasks: { 'task-algo': { status, updatedAt: '2026-11-09T09:00:00-06:00' } },
+  });
+  assert.equal(
+    calendarEntries([{ ...day, plan, taskState: state('done') }])[0].status,
+    'completed',
+  );
+  const completed = {
+    ...plan,
+    blocks: [{ ...plan.blocks[0], status: 'completed' as const }],
+  };
+  assert.equal(
+    calendarEntries([{ ...day, plan: completed, taskState: state('todo') }])[0]
+      .status,
+    'pending',
+  );
+  assert.equal(
+    calendarEntries([
+      {
+        ...day,
+        plan,
+        taskState: state('todo'),
+        completedHistory: { 'task-algo': '2026-11-09T11:00:00-06:00' },
+      },
+    ])[0].status,
+    'completed',
+  );
+  assert.equal(
+    calendarEntries([{ ...day, plan, taskState: state('todo') }], completed)[0]
+      .status,
+    'pending',
+  );
+});

@@ -89,7 +89,9 @@ test('page check-in supports questions, visible proposal, discard and explicit c
   await page
     .getByRole('button', { name: 'Plan with Codex', exact: true })
     .click();
-  await expect(page.getByRole('dialog')).not.toContainText('terminal');
+  await expect(
+    page.getByRole('complementary', { name: 'Planning assistant' }),
+  ).not.toContainText('terminal');
   await page.getByRole('button', { name: 'Good morning', exact: true }).click();
   await expect(page.getByRole('log')).toContainText(
     'How is your energy today?',
@@ -117,7 +119,9 @@ test('page check-in supports questions, visible proposal, discard and explicit c
         () => document.documentElement.scrollWidth <= innerWidth,
       ),
     ).toBe(true);
-    const box = await page.getByRole('dialog').boundingBox();
+    const box = await page
+      .getByRole('complementary', { name: 'Planning assistant' })
+      .boundingBox();
     expect(box!.width).toBeLessThanOrEqual(width);
   }
   await page
@@ -133,7 +137,9 @@ test('page check-in supports questions, visible proposal, discard and explicit c
     'message',
     'confirm',
   ]);
-  await page.keyboard.press('Escape');
+  await page
+    .getByRole('button', { name: 'Close planning assistant', exact: true })
+    .click();
   await page
     .getByRole('button', { name: 'Plan with Codex', exact: true })
     .click();
@@ -163,9 +169,11 @@ test('connection errors are visible, keep unsent text and never pretend a model 
     .getByRole('textbox', { name: 'Message Codex' })
     .fill('Help me prioritize');
   await page.getByRole('button', { name: 'Send message', exact: true }).click();
-  await expect(page.getByRole('dialog').getByRole('alert')).toContainText(
-    'No plan was saved',
-  );
+  await expect(
+    page
+      .getByRole('complementary', { name: 'Planning assistant' })
+      .getByRole('alert'),
+  ).toContainText('No plan was saved');
   await expect(
     page.getByRole('textbox', { name: 'Message Codex' }),
   ).toHaveValue('Help me prioritize');

@@ -23,6 +23,7 @@ test('kanban is readable, all tasks searchable, filters and schedule work across
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/board?date=2026-11-10');
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'Task board', exact: true }),
   ).toBeVisible();
@@ -41,14 +42,18 @@ test('kanban is readable, all tasks searchable, filters and schedule work across
   await page
     .getByRole('button', { name: 'All tasks (12)', exact: true })
     .click();
-  await page.getByRole('button', { name: 'Schedule', exact: true }).click();
-  await expect(page.getByRole('dialog')).toContainText('Systems Programming');
-  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Calendar', exact: true }).click();
+  await expect(
+    page.getByRole('region', { name: 'Schedule calendar' }),
+  ).toContainText('Systems Programming');
   await page
     .getByRole('button', { name: 'Plan with Codex', exact: true })
     .click();
-  await expect(page.getByRole('dialog')).toContainText('YOUR DAILY CHECK-IN');
-  await page.keyboard.press('Escape');
+  await expect(
+    page.getByRole('complementary', { name: 'Planning assistant' }),
+  ).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click();
   for (const width of [1487, 1024, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
     expect(
@@ -64,6 +69,7 @@ test('manual states persist across reload and drag-drop without altering sources
 }) => {
   const before = hash();
   await page.goto('/board?date=2026-11-10');
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click();
   const task = page.getByRole('article', {
     name: 'Record & submit LifeHarness demo',
     exact: true,
@@ -75,6 +81,7 @@ test('manual states persist across reload and drag-drop without altering sources
       .getByRole('article'),
   ).toHaveCount(1);
   await page.reload();
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click();
   await expect(
     page
       .getByRole('region', { name: 'In progress column' })
@@ -115,6 +122,7 @@ test('focus timer can start pause reset and retain time after reload', async ({
 }) => {
   await page.clock.install({ time: new Date('2026-11-10T15:00:00Z') });
   await page.goto('/board?date=2026-11-10');
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click();
   await page.getByRole('button', { name: 'Start focus', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Pause focus', exact: true }),
@@ -125,6 +133,7 @@ test('focus timer can start pause reset and retain time after reload', async ({
   await page.clock.fastForward(120000);
   await expect(page.getByTestId('focus-clock')).toHaveText('24:00');
   await page.reload();
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click();
   await expect(page.getByTestId('focus-clock')).toHaveText('24:00');
   await page.getByRole('button', { name: 'Reset timer', exact: true }).click();
   await expect(page.getByTestId('focus-clock')).toHaveText('25:00');
@@ -154,6 +163,7 @@ test('confirmed plans refresh, invalid reads and connection failures retain last
   try {
     if (existsSync(file)) unlinkSync(file);
     await page.goto('/board?date=2026-11-15');
+    await page.getByRole('button', { name: 'Tasks', exact: true }).click();
     await expect(
       page.getByText('No confirmed plan', { exact: true }),
     ).toBeVisible();
@@ -163,9 +173,10 @@ test('confirmed plans refresh, invalid reads and connection failures retain last
       { timeout: 5000 },
     );
     console.log('Plan refresh:', Date.now() - start, 'ms');
-    await page.getByRole('button', { name: 'Schedule', exact: true }).click();
-    await expect(page.getByRole('dialog')).toContainText(plan.summary);
-    await page.keyboard.press('Escape');
+    await page.getByRole('button', { name: 'Calendar', exact: true }).click();
+    await expect(
+      page.getByRole('region', { name: 'Schedule calendar' }),
+    ).toContainText(plan.summary);
     writeFileSync(file, '{partial');
     await expect(
       page.getByRole('status').filter({ hasText: 'plan for' }),
@@ -177,6 +188,7 @@ test('confirmed plans refresh, invalid reads and connection failures retain last
     await expect(
       page.getByRole('status').filter({ hasText: 'Connection interrupted' }),
     ).toBeVisible({ timeout: 5000 });
+    await page.getByRole('button', { name: 'Tasks', exact: true }).click();
     await expect(page.getByRole('article')).toHaveCount(12);
   } finally {
     if (old) writeFileSync(file, old);
@@ -188,6 +200,7 @@ test('source errors retain tasks and dialogs trap and restore keyboard focus', a
   request,
 }) => {
   await page.goto('/board?date=2026-11-10');
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click();
   await expect(page.getByRole('article')).toHaveCount(12);
   const original = await (
     await request.get('/api/dashboard?date=2026-11-10')
@@ -212,26 +225,22 @@ test('source errors retain tasks and dialogs trap and restore keyboard focus', a
   });
   await opener.click();
   await expect(
-    page.getByRole('button', { name: 'Close dialog' }),
-  ).toBeFocused();
+    page.getByRole('complementary', { name: 'Planning assistant' }),
+  ).toBeVisible();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Calendar', exact: true }).click();
+  await expect(
+    page.getByRole('heading', { name: 'Your calendar', exact: true }),
+  ).toBeVisible();
   await expect(
     page.getByRole('textbox', { name: 'Message Codex' }),
-  ).toBeEnabled();
-  await page.keyboard.press('Shift+Tab');
-  await expect(
-    page.getByRole('textbox', { name: 'Message Codex' }),
-  ).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(
-    page.getByRole('button', { name: 'Close dialog' }),
-  ).toBeFocused();
-  await page.keyboard.press('Escape');
-  await expect(opener).toBeFocused();
+  ).toBeVisible();
 });
 test('job tracker keeps application statuses and upcoming interviews accessible', async ({
   page,
 }) => {
   await page.goto('/board?date=2026-11-10');
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Open job tracker', exact: true }),
   ).toBeVisible({ timeout: 1000 });
@@ -250,6 +259,7 @@ test('failed status save leaves the task unchanged and shows a recoverable error
   page,
 }) => {
   await page.goto('/board?date=2026-11-10');
+  await page.getByRole('button', { name: 'Tasks', exact: true }).click();
   await page.route('**/api/tasks', (route) =>
     route.fulfill({
       status: 500,
@@ -285,7 +295,7 @@ test('homepage introduces LifeHarness and enters the board with working back nav
     .click();
   await expect(page).toHaveURL(/\/board$/);
   await expect(
-    page.getByRole('heading', { name: 'Task board', exact: true }),
+    page.getByRole('heading', { name: 'Your calendar', exact: true }),
   ).toBeVisible();
   await page
     .getByRole('link', { name: 'LifeHarness home', exact: true })

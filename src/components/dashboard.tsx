@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
   ArrowRight,
@@ -25,6 +25,7 @@ import {
   Terminal,
   Timer,
   TriangleAlert,
+  X,
 } from 'lucide-react';
 import { chicagoDate, dateLabel, timeLabel, validDate } from '@/lib/dates';
 import { boardTasks, filterTasks, type BoardTask } from '@/lib/board';
@@ -35,6 +36,8 @@ import { useDashboard } from './use-dashboard';
 import { useFocus } from './use-focus';
 import { Overlay } from './overlay';
 import { PlannerChat } from './planner-chat';
+import { CalendarView } from './calendar-view';
+import type { DraftPreview } from '@/lib/web-planner';
 import { TaskCard } from './task-card';
 const DEMO_DATE = '2026-11-10';
 const columns = [
@@ -44,12 +47,31 @@ const columns = [
 ] as const;
 export default function Dashboard() {
   const [date, setDate] = useState(chicagoDate());
+  const [workspaceView, setWorkspaceView] = useState<'calendar' | 'tasks'>(
+    'calendar',
+  );
+  const [assistantOpen, setAssistantOpen] = useState(true);
+  const [preview, setPreview] = useState<DraftPreview | null>(null);
+  const [calendarVersion, setCalendarVersion] = useState(0);
+  const assistant = useRef<HTMLElement>(null);
+  const savedPlan = useCallback(() => setCalendarVersion((v) => v + 1), []);
+  function openAssistant() {
+    setAssistantOpen(true);
+    requestAnimationFrame(() => {
+      assistant.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+      assistant.current
+        ?.querySelector<HTMLTextAreaElement>('textarea')
+        ?.focus();
+    });
+  }
+  useEffect(() => setPreview(null), [date]);
   const [domain, setDomain] = useState<'all' | 'academic' | 'career'>('all');
   const [query, setQuery] = useState('');
   const [due, setDue] = useState<'all' | 'today' | 'urgent'>('all');
-  const [panel, setPanel] = useState<'schedule' | 'codex' | 'career' | null>(
-    null,
-  );
+  const [panel, setPanel] = useState<'career' | null>(null);
   const [detailId, setDetailId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -134,7 +156,9 @@ export default function Dashboard() {
     .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
   const nextEvent = fixed[0];
   return (
-    <div className="app-shell">
+    <div
+      className={`app-shell calendar-layout ${workspaceView === 'calendar' ? 'calendar-mode' : ''} ${assistantOpen ? 'with-assistant' : ''}`}
+    >
       <a href="#main" className="skip-link">
         Skip to task board
       </a>
@@ -146,14 +170,17 @@ export default function Dashboard() {
           <button
             className={domain === 'all' ? 'rail-button active' : 'rail-button'}
             aria-label="All tasks board"
-            onClick={() => setDomain('all')}
+            onClick={() => {
+              setWorkspaceView('tasks');
+              setDomain('all');
+            }}
           >
             <Columns3 size={25} />
           </button>
           <button
             className="rail-button"
             aria-label="Open schedule"
-            onClick={() => setPanel('schedule')}
+            onClick={() => setWorkspaceView('calendar')}
           >
             <CalendarDays size={25} />
           </button>
@@ -181,10 +208,10 @@ export default function Dashboard() {
         </nav>
         <button
           className="rail-button rail-bottom"
-          aria-label="Codex check-in instructions"
-          onClick={() => setPanel('codex')}
+          aria-label="Open planning assistant"
+          onClick={openAssistant}
         >
-          <Terminal size={23} />
+          <Sparkles size={23} />
         </button>
       </aside>
       <div className="board-workspace">
@@ -192,32 +219,44 @@ export default function Dashboard() {
           <a className="wordmark" href="/">
             LifeHarness<span>.</span>
           </a>
-          <span className="header-separator" />
-          <span className="current-date">
-            <CalendarDays size={20} />
-            {new Intl.DateTimeFormat('en-US', {
-              timeZone: 'America/Chicago',
-              month: 'short',
-              day: 'numeric',
-              year: 'numeric',
-            }).format(new Date())}
-            <span>America/Chicago</span>
-          </span>
+          <nav className="workspace-tabs" aria-label="Workspace views">
+            <button
+              aria-pressed={workspaceView === 'calendar'}
+              onClick={() => setWorkspaceView('calendar')}
+            >
+              <CalendarDays size={16} />
+              Calendar
+            </button>
+            <button
+              aria-pressed={workspaceView === 'tasks'}
+              onClick={() => setWorkspaceView('tasks')}
+            >
+              <Columns3 size={16} />
+              Tasks
+            </button>
+          </nav>
           <button
-            className="schedule-button"
-            onClick={() => setPanel('schedule')}
+            className="workspace-career"
+            onClick={() => setPanel('career')}
           >
-            <CalendarDays size={19} />
-            Schedule
-            <ChevronDown size={16} />
+            <BriefcaseBusiness size={16} />
+            Career
           </button>
         </header>
         <main id="main" className="board-main">
           <section className="board-heading">
             <div>
-              <p className="section-kicker">FOCUS LANE</p>
+              <p className="section-kicker">
+                {workspaceView === 'calendar'
+                  ? 'MAKE ROOM FOR WHAT MATTERS'
+                  : 'ONE STEP AT A TIME'}
+              </p>
               <div className="title-row">
-                <h1>Task board</h1>
+                <h1>
+                  {workspaceView === 'calendar'
+                    ? 'Your calendar'
+                    : 'Task board'}
+                </h1>
                 <label className="board-date">
                   <CalendarDays size={22} />
                   <input
@@ -230,7 +269,11 @@ export default function Dashboard() {
                 {demo && <span className="demo-label">Demo</span>}
               </div>
               <div className="heading-subline">
-                <strong>One task at a time.</strong>
+                <strong>
+                  {workspaceView === 'calendar'
+                    ? 'A clearer picture of your time.'
+                    : 'One task at a time.'}
+                </strong>
                 <span>
                   {completed} / {tasks.length} completed
                 </span>
@@ -239,7 +282,7 @@ export default function Dashboard() {
             <button
               className="primary-btn plan-button"
               onClick={() => {
-                setPanel('codex');
+                openAssistant();
               }}
             >
               <Sparkles size={21} />
@@ -303,358 +346,313 @@ export default function Dashboard() {
           <div className="sr-only" aria-live="polite">
             {notice}
           </div>
-          <section
-            className={`focus-strip ${!focusTask ? 'empty-focus' : ''}`}
-            aria-label="Focus timer"
-          >
-            <div className="focus-copy">
-              <Target size={25} />
-              <span className="focus-label">FOCUS NOW</span>
-              <span className="focus-dash">—</span>
-              <div className="focus-task">
-                <strong>
-                  {focusTask?.title ??
-                    (loading ? 'Loading your tasks…' : 'You’re all caught up.')}
-                </strong>
-                {focusTask && (
-                  <span>
-                    {focusTask.durationMinutes} min <span>·</span>{' '}
-                    {chicagoDate(new Date(focusTask.due)) <= date
-                      ? 'Due ' +
-                        (chicagoDate(new Date(focusTask.due)) === date
-                          ? 'today · ' + timeLabel(focusTask.due)
-                          : 'earlier')
-                      : new Intl.DateTimeFormat('en-US', {
-                          timeZone: 'America/Chicago',
-                          month: 'short',
-                          day: 'numeric',
-                        }).format(new Date(focusTask.due))}
-                  </span>
-                )}
-              </div>
-            </div>
-            <div className="timer-controls">
-              <div className="timer-display">
-                <Timer size={21} />
-                <span data-testid="focus-clock">{clock}</span>
-              </div>
-              <button
-                className="primary-btn focus-start"
-                disabled={!focusTask || saving}
-                onClick={toggleTimer}
-              >
-                {running ? <Pause size={17} /> : <Play size={17} />}
-                <span>
-                  {running
-                    ? 'Pause focus'
-                    : remaining === 0
-                      ? 'Start focus'
-                      : 'Start focus'}
-                </span>
-              </button>
-              <button
-                className="icon-btn timer-reset"
-                disabled={!focusTask}
-                aria-label="Reset timer"
-                onClick={() => timer.update(newFocus(focusTask?.id ?? null))}
-              >
-                <RotateCcw size={17} />
-              </button>
-            </div>
-          </section>
-          {timerMatches && remaining === 0 && (
-            <p className="timer-message" role="status">
-              Focus session complete. Take a break, then mark the task done when
-              you’re ready.
-            </p>
-          )}
-          {timer.storageError && (
-            <p className="timer-message" role="status">
-              Browser storage is unavailable. Your timer will reset if you
-              reload.
-            </p>
-          )}
-          <section className="board-toolbar" aria-label="Task filters">
-            <label className="task-search">
-              <Search size={21} />
-              <input
-                aria-label="Search tasks"
-                placeholder="Search tasks"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-              />
-              {query && (
-                <button aria-label="Clear search" onClick={() => setQuery('')}>
-                  Clear
-                </button>
-              )}
-            </label>
-            <div className="filter-tabs">
-              <button
-                className={domain === 'all' ? 'selected' : ''}
-                onClick={() => setDomain('all')}
-              >
-                All tasks <span>({tasks.length})</span>
-              </button>
-              <button
-                className={domain === 'academic' ? 'selected' : ''}
-                onClick={() => setDomain('academic')}
-              >
-                Coursework{' '}
-                <span>
-                  ({tasks.filter((t) => t.domain === 'academic').length})
-                </span>
-              </button>
-              <button
-                className={domain === 'career' ? 'selected' : ''}
-                onClick={() => setDomain('career')}
-              >
-                Job search{' '}
-                <span>
-                  ({tasks.filter((t) => t.domain === 'career').length})
-                </span>
-              </button>
-            </div>
-            <label className="due-filter">
-              <span className="sr-only">Deadline filter</span>
-              <select
-                aria-label="Deadline filter"
-                value={due}
-                onChange={(e) => setDue(e.target.value as typeof due)}
-              >
-                <option value="all">All deadlines</option>
-                <option value="today">Due today</option>
-                <option value="urgent">Due or overdue</option>
-              </select>
-            </label>
-          </section>
-          {loading && !data ? (
-            <div className="loading-board" role="status">
-              <Loader2 size={25} />
-              <h2>Loading your task board</h2>
-              <p>Bringing coursework and your job search together.</p>
-            </div>
-          ) : !data ? (
-            <div className="loading-board">
-              <h2>Couldn’t load your workspace</h2>
-              <p>Keep the local server running. We’ll retry automatically.</p>
-            </div>
+          {workspaceView === 'calendar' ? (
+            <CalendarView
+              date={date}
+              onDate={changeDate}
+              preview={preview}
+              refreshVersion={calendarVersion}
+              onPlan={openAssistant}
+              onTask={setDetailId}
+            />
           ) : (
-            <div className={`kanban-board ${dragId ? 'is-dragging' : ''}`}>
-              {columns.map((column) => {
-                const cards = visible.filter((t) => t.status === column.status);
-                const Icon = column.icon;
-                return (
-                  <section
-                    key={column.status}
-                    role="region"
-                    aria-label={`${column.label} column`}
-                    className={`kanban-column ${column.status} ${dropStatus === column.status ? 'drop-active' : ''}`}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      e.dataTransfer.dropEffect = 'move';
-                      setDropStatus(column.status);
-                    }}
-                    onDragLeave={(e) => {
-                      if (
-                        !(e.relatedTarget instanceof Node) ||
-                        !e.currentTarget.contains(e.relatedTarget)
-                      )
-                        setDropStatus(null);
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      const id = e.dataTransfer.getData('text/plain');
-                      setDropStatus(null);
-                      setDragId(null);
-                      if (tasks.some((t) => t.id === id))
-                        void move(id, column.status);
-                    }}
-                  >
-                    <header className="column-heading">
-                      <h2>
-                        <Icon size={23} />
-                        {column.label}
-                      </h2>
+            <>
+              <section
+                className={`focus-strip ${!focusTask ? 'empty-focus' : ''}`}
+                aria-label="Focus timer"
+              >
+                <div className="focus-copy">
+                  <Target size={25} />
+                  <span className="focus-label">FOCUS NOW</span>
+                  <span className="focus-dash">—</span>
+                  <div className="focus-task">
+                    <strong>
+                      {focusTask?.title ??
+                        (loading
+                          ? 'Loading your tasks…'
+                          : 'You’re all caught up.')}
+                    </strong>
+                    {focusTask && (
                       <span>
-                        {cards.length} {cards.length === 1 ? 'task' : 'tasks'}
+                        {focusTask.durationMinutes} min <span>·</span>{' '}
+                        {chicagoDate(new Date(focusTask.due)) <= date
+                          ? 'Due ' +
+                            (chicagoDate(new Date(focusTask.due)) === date
+                              ? 'today · ' + timeLabel(focusTask.due)
+                              : 'earlier')
+                          : new Intl.DateTimeFormat('en-US', {
+                              timeZone: 'America/Chicago',
+                              month: 'short',
+                              day: 'numeric',
+                            }).format(new Date(focusTask.due))}
                       </span>
-                    </header>
-                    <div className="column-tasks">
-                      {cards.map((task) => (
-                        <TaskCard
-                          key={task.id}
-                          task={task}
-                          date={date}
-                          busy={saving}
-                          move={(id, status) => void move(id, status)}
-                          focus={(id) => void beginFocus(id)}
-                          details={setDetailId}
-                          drag={setDragId}
-                        />
-                      ))}
-                      {!cards.length && (
-                        <div className="empty-column">
-                          {column.status === 'done' ? (
-                            <CheckCircle2 size={29} />
-                          ) : column.status === 'in_progress' ? (
-                            <Play size={29} />
-                          ) : (
-                            <ListTodo size={29} />
-                          )}
-                          <strong>
-                            {query || domain !== 'all' || due !== 'all'
-                              ? 'No matching tasks'
-                              : column.status === 'done'
-                                ? 'Good work goes here.'
-                                : column.status === 'in_progress'
-                                  ? 'Make one thing your focus.'
-                                  : 'Nothing left to start.'}
-                          </strong>
-                          <p>
-                            {query || domain !== 'all' || due !== 'all'
-                              ? 'Try another search or filter.'
-                              : column.status === 'done'
-                                ? 'Mark a task done to see your progress.'
-                                : column.status === 'in_progress'
-                                  ? 'Start a task or drag one here.'
-                                  : 'Enjoy a little breathing room.'}
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </section>
-                );
-              })}
-            </div>
-          )}
-          <button
-            className="next-event-bar"
-            onClick={() => setPanel('schedule')}
-          >
-            <GraduationCap size={24} />
-            <strong>
-              {nextEvent
-                ? nextEvent.kind === 'class'
-                  ? 'Next class:'
-                  : 'Next interview:'
-                : 'Your schedule'}
-            </strong>
-            <span>
-              {nextEvent
-                ? `${nextEvent.title} · ${chicagoDate(new Date(nextEvent.start)) === date ? '' : new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', month: 'short', day: 'numeric' }).format(new Date(nextEvent.start)) + ' · '}${timeLabel(nextEvent.start)}`
-                : 'No upcoming fixed events. View your confirmed plan.'}
-            </span>
-            <ChevronRight size={22} />
-          </button>
-          <footer className="board-footer">
-            <span>Move tasks by dragging or use the status menu.</span>
-            <span>
-              <ShieldCheck size={13} />
-              Your original calendar and tracker stay protected.
-            </span>
-          </footer>
-        </main>
-      </div>
-      {panel === 'codex' && (
-        <Overlay title="Plan with Codex" close={() => setPanel(null)}>
-          <PlannerChat key={date} date={date} />
-        </Overlay>
-      )}
-      {panel === 'schedule' && (
-        <Overlay drawer title="Your schedule" close={() => setPanel(null)}>
-          <p className="drawer-subtitle">{dateLabel(date)} · America/Chicago</p>
-          {view?.conflicts.map((c) => (
-            <div className="notice warning" key={c}>
-              {c}
-            </div>
-          ))}
-          {data?.plan && (
-            <section className="confirmed-summary">
-              <span className="section-kicker">CONFIRMED WITH CLAUDE</span>
-              <h3>{data.plan.summary}</h3>
-              <p>
-                Last check-in:{' '}
-                {dateLabel(chicagoDate(new Date(data.plan.confirmedAt)))} ·{' '}
-                {timeLabel(data.plan.confirmedAt)}
-              </p>
-              <ul>
-                {data.plan.priorities.map((p) => (
-                  <li key={p.id}>
-                    <Target size={15} />
-                    <span>
-                      <strong>{p.title}</strong>
-                      <small>{p.reason}</small>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-          <h3 className="drawer-section-label">
-            {data?.plan ? 'Confirmed timeline' : 'Fixed events today'}
-          </h3>
-          <div className="schedule-list">
-            {(data?.plan?.blocks.length
-              ? data.plan.blocks
-              : (view?.events ?? [])
-            ).map((event) => (
-              <div key={event.id} className="schedule-row">
-                <div>
-                  <strong>{timeLabel(event.start)}</strong>
-                  <span>{timeLabel(event.end)}</span>
-                </div>
-                <section>
-                  <span className={`event-kind ${event.kind}`}>
-                    {event.kind === 'class'
-                      ? 'Class'
-                      : event.kind === 'interview'
-                        ? 'Interview'
-                        : event.kind === 'break'
-                          ? 'Break'
-                          : 'Focus time'}
-                  </span>
-                  <h4>{event.title}</h4>
-                  <p>
-                    {Math.round(
-                      (Date.parse(event.end) - Date.parse(event.start)) / 60000,
-                    )}{' '}
-                    minutes
-                  </p>
-                </section>
-              </div>
-            ))}
-            {!(data?.plan?.blocks.length || view?.events.length) && (
-              <p className="drawer-empty">
-                No fixed events today. Ask Codex to build a plan around your
-                tasks.
-              </p>
-            )}
-          </div>
-          <h3 className="drawer-section-label">Coming up</h3>
-          <div className="upcoming-list">
-            {fixed
-              .filter((e) => chicagoDate(new Date(e.start)) > date)
-              .slice(0, 5)
-              .map((e) => (
-                <div key={e.id}>
-                  <CalendarDays size={18} />
-                  <div>
-                    <strong>{e.title}</strong>
-                    <p>
-                      {dateLabel(chicagoDate(new Date(e.start)))} ·{' '}
-                      {timeLabel(e.start)}
-                    </p>
+                    )}
                   </div>
                 </div>
-              ))}
-            {!fixed.some((e) => chicagoDate(new Date(e.start)) > date) && (
-              <p className="drawer-empty">
-                No upcoming events in your source data.
-              </p>
-            )}
-          </div>
-        </Overlay>
+                <div className="timer-controls">
+                  <div className="timer-display">
+                    <Timer size={21} />
+                    <span data-testid="focus-clock">{clock}</span>
+                  </div>
+                  <button
+                    className="primary-btn focus-start"
+                    disabled={!focusTask || saving}
+                    onClick={toggleTimer}
+                  >
+                    {running ? <Pause size={17} /> : <Play size={17} />}
+                    <span>
+                      {running
+                        ? 'Pause focus'
+                        : remaining === 0
+                          ? 'Start focus'
+                          : 'Start focus'}
+                    </span>
+                  </button>
+                  <button
+                    className="icon-btn timer-reset"
+                    disabled={!focusTask}
+                    aria-label="Reset timer"
+                    onClick={() =>
+                      timer.update(newFocus(focusTask?.id ?? null))
+                    }
+                  >
+                    <RotateCcw size={17} />
+                  </button>
+                </div>
+              </section>
+              {timerMatches && remaining === 0 && (
+                <p className="timer-message" role="status">
+                  Focus session complete. Take a break, then mark the task done
+                  when you’re ready.
+                </p>
+              )}
+              {timer.storageError && (
+                <p className="timer-message" role="status">
+                  Browser storage is unavailable. Your timer will reset if you
+                  reload.
+                </p>
+              )}
+              <section className="board-toolbar" aria-label="Task filters">
+                <label className="task-search">
+                  <Search size={21} />
+                  <input
+                    aria-label="Search tasks"
+                    placeholder="Search tasks"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                  />
+                  {query && (
+                    <button
+                      aria-label="Clear search"
+                      onClick={() => setQuery('')}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </label>
+                <div className="filter-tabs">
+                  <button
+                    className={domain === 'all' ? 'selected' : ''}
+                    onClick={() => setDomain('all')}
+                  >
+                    All tasks <span>({tasks.length})</span>
+                  </button>
+                  <button
+                    className={domain === 'academic' ? 'selected' : ''}
+                    onClick={() => setDomain('academic')}
+                  >
+                    Coursework{' '}
+                    <span>
+                      ({tasks.filter((t) => t.domain === 'academic').length})
+                    </span>
+                  </button>
+                  <button
+                    className={domain === 'career' ? 'selected' : ''}
+                    onClick={() => setDomain('career')}
+                  >
+                    Job search{' '}
+                    <span>
+                      ({tasks.filter((t) => t.domain === 'career').length})
+                    </span>
+                  </button>
+                </div>
+                <label className="due-filter">
+                  <span className="sr-only">Deadline filter</span>
+                  <select
+                    aria-label="Deadline filter"
+                    value={due}
+                    onChange={(e) => setDue(e.target.value as typeof due)}
+                  >
+                    <option value="all">All deadlines</option>
+                    <option value="today">Due today</option>
+                    <option value="urgent">Due or overdue</option>
+                  </select>
+                </label>
+              </section>
+              {loading && !data ? (
+                <div className="loading-board" role="status">
+                  <Loader2 size={25} />
+                  <h2>Loading your task board</h2>
+                  <p>Bringing coursework and your job search together.</p>
+                </div>
+              ) : !data ? (
+                <div className="loading-board">
+                  <h2>Couldn’t load your workspace</h2>
+                  <p>
+                    Keep the local server running. We’ll retry automatically.
+                  </p>
+                </div>
+              ) : (
+                <div className={`kanban-board ${dragId ? 'is-dragging' : ''}`}>
+                  {columns.map((column) => {
+                    const cards = visible.filter(
+                      (t) => t.status === column.status,
+                    );
+                    const Icon = column.icon;
+                    return (
+                      <section
+                        key={column.status}
+                        role="region"
+                        aria-label={`${column.label} column`}
+                        className={`kanban-column ${column.status} ${dropStatus === column.status ? 'drop-active' : ''}`}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'move';
+                          setDropStatus(column.status);
+                        }}
+                        onDragLeave={(e) => {
+                          if (
+                            !(e.relatedTarget instanceof Node) ||
+                            !e.currentTarget.contains(e.relatedTarget)
+                          )
+                            setDropStatus(null);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const id = e.dataTransfer.getData('text/plain');
+                          setDropStatus(null);
+                          setDragId(null);
+                          if (tasks.some((t) => t.id === id))
+                            void move(id, column.status);
+                        }}
+                      >
+                        <header className="column-heading">
+                          <h2>
+                            <Icon size={23} />
+                            {column.label}
+                          </h2>
+                          <span>
+                            {cards.length}{' '}
+                            {cards.length === 1 ? 'task' : 'tasks'}
+                          </span>
+                        </header>
+                        <div className="column-tasks">
+                          {cards.map((task) => (
+                            <TaskCard
+                              key={task.id}
+                              task={task}
+                              date={date}
+                              busy={saving}
+                              move={(id, status) => void move(id, status)}
+                              focus={(id) => void beginFocus(id)}
+                              details={setDetailId}
+                              drag={setDragId}
+                            />
+                          ))}
+                          {!cards.length && (
+                            <div className="empty-column">
+                              {column.status === 'done' ? (
+                                <CheckCircle2 size={29} />
+                              ) : column.status === 'in_progress' ? (
+                                <Play size={29} />
+                              ) : (
+                                <ListTodo size={29} />
+                              )}
+                              <strong>
+                                {query || domain !== 'all' || due !== 'all'
+                                  ? 'No matching tasks'
+                                  : column.status === 'done'
+                                    ? 'Good work goes here.'
+                                    : column.status === 'in_progress'
+                                      ? 'Make one thing your focus.'
+                                      : 'Nothing left to start.'}
+                              </strong>
+                              <p>
+                                {query || domain !== 'all' || due !== 'all'
+                                  ? 'Try another search or filter.'
+                                  : column.status === 'done'
+                                    ? 'Mark a task done to see your progress.'
+                                    : column.status === 'in_progress'
+                                      ? 'Start a task or drag one here.'
+                                      : 'Enjoy a little breathing room.'}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </section>
+                    );
+                  })}
+                </div>
+              )}
+              <button
+                className="next-event-bar"
+                onClick={() => setWorkspaceView('calendar')}
+              >
+                <GraduationCap size={24} />
+                <strong>
+                  {nextEvent
+                    ? nextEvent.kind === 'class'
+                      ? 'Next class:'
+                      : 'Next interview:'
+                    : 'Your schedule'}
+                </strong>
+                <span>
+                  {nextEvent
+                    ? `${nextEvent.title} · ${chicagoDate(new Date(nextEvent.start)) === date ? '' : new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', month: 'short', day: 'numeric' }).format(new Date(nextEvent.start)) + ' · '}${timeLabel(nextEvent.start)}`
+                    : 'No upcoming fixed events. View your confirmed plan.'}
+                </span>
+                <ChevronRight size={22} />
+              </button>
+              <footer className="board-footer">
+                <span>Move tasks by dragging or use the status menu.</span>
+                <span>
+                  <ShieldCheck size={13} />
+                  Your original calendar and tracker stay protected.
+                </span>
+              </footer>
+            </>
+          )}
+        </main>
+      </div>
+      {assistantOpen && (
+        <aside
+          ref={assistant}
+          className="assistant-panel"
+          aria-label="Planning assistant"
+        >
+          <header className="assistant-panel-heading">
+            <span className="assistant-mark">
+              <Sparkles size={20} />
+            </span>
+            <div>
+              <h2>Your assistant</h2>
+              <p>A plan that works for you.</p>
+            </div>
+            <button
+              className="icon-btn"
+              aria-label="Close planning assistant"
+              onClick={() => setAssistantOpen(false)}
+            >
+              <X size={18} />
+            </button>
+          </header>
+          <PlannerChat
+            key={date}
+            date={date}
+            onDraftChange={setPreview}
+            onSaved={savedPlan}
+          />
+        </aside>
       )}
       {panel === 'career' && (
         <Overlay drawer title="Job search" close={() => setPanel(null)}>

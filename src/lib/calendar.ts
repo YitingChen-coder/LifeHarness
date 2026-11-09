@@ -1,6 +1,7 @@
 import { chicagoDate, chicagoMinutes, validDate } from './dates';
 import type { DashboardData } from './store';
 import type { Plan } from './schema';
+import { boardTasks } from './board';
 export type CalendarEntry = {
   id: string;
   sourceId?: string;
@@ -45,6 +46,9 @@ export function calendarEntries(
         draft: false,
         status: 'pending',
       });
+    const progress = new Map(
+      boardTasks(day).map((task) => [task.id, task.status]),
+    );
     const plan = preview?.date === day.date ? preview : day.plan;
     for (const block of plan?.blocks ?? []) {
       if (
@@ -52,7 +56,19 @@ export function calendarEntries(
         fixed.some((e) => e.id === block.sourceId)
       )
         continue;
-      result.push({ ...block, date: day.date, draft: plan === preview });
+      result.push({
+        ...block,
+        status:
+          block.kind === 'task' &&
+          block.sourceId &&
+          progress.has(block.sourceId)
+            ? progress.get(block.sourceId) === 'done'
+              ? 'completed'
+              : 'pending'
+            : block.status,
+        date: day.date,
+        draft: plan === preview,
+      });
     }
   }
   return result.sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
