@@ -27,8 +27,8 @@ Help the user choose a realistic day. Proposals are not permission to save.
    me”, “not yet” and new requirements are not. A changed proposal needs agreement
    again. If the user declines, write nothing, including notes.
 6. Only after agreement, read context/output-format.md and src/lib/schema.ts, then
-   use Write for the complete data/generated/YYYY-MM-DD.json. Use actual current
-   time, not the demo date, for confirmedAt. Include source IDs and statuses;
+   use Write for the complete data/generated/YYYY-MM-DD.json. Use the latest UserPromptSubmit clock
+   timestamp, not the launch time or demo date, for confirmedAt. Include source IDs and statuses;
    preserve existing completed work unless the user explicitly changes it.
 7. After the plan write succeeds, Write data/generated/notes.json with confirmed
    carryover and factual reflections. If either write fails, explain exactly which

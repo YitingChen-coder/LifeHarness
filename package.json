@@ -10,7 +10,10 @@
     "test": "tsx --test tests/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build",
     "planner": "node scripts/planner.mjs",
-    "planner:demo": "node scripts/planner.mjs --date 2026-11-10"
+    "planner:demo": "node scripts/planner.mjs --date 2026-11-10",
+    "test:e2e": "npm run build && playwright test",
+    "test:safety": "node scripts/verify-safety.mjs",
+    "test:hook:live": "node scripts/test-live-hook.mjs"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

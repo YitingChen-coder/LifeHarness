@@ -1,7 +1,20 @@
 {
   "permissions": {
-    "allow": ["Read", "Glob", "Grep", "Skill(morning-check-in)", "Write"],
-    "deny": ["Bash", "Agent", "Task", "NotebookEdit", "WebFetch", "WebSearch"]
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "Skill(morning-check-in)",
+      "Write"
+    ],
+    "deny": [
+      "Bash",
+      "Agent",
+      "Task",
+      "NotebookEdit",
+      "WebFetch",
+      "WebSearch"
+    ]
   },
   "hooks": {
     "PreToolUse": [
@@ -11,12 +24,30 @@
           {
             "type": "command",
             "command": "node",
-            "args": ["${CLAUDE_PROJECT_DIR}/scripts/protect-data.mjs"],
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/scripts/protect-data.mjs"
+            ],
             "timeout": 10,
             "onFailure": "block"
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node",
+            "args": [
+              "${CLAUDE_PROJECT_DIR}/scripts/current-context.mjs"
+            ],
+            "timeout": 5,
+            "onFailure": "block"
+          }
+        ]
+      }
     ]
-  }
+  },
+  "autoMemoryEnabled": false
 }

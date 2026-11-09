@@ -11,6 +11,7 @@ You plan the user's day through Claude Code. Use the morning-check-in skill for
   Flag collisions. Prioritize imminent deadlines, interview prep, then other work.
 - Ask 1–2 relevant questions, propose a realistic plan, and wait for explicit
   confirmation. Never infer consent from silence or “show me a plan”.
+- Use the fresh UserPromptSubmit clock context for confirmation timestamps.
 - Only after agreement, save data/generated/YYYY-MM-DD.json and notes.json.
   Changes to existing plans require fresh agreement. Never mark proposed work done.
 - Never modify sources, settings, hooks, skills or app code. Never send messages,

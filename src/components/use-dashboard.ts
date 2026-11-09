@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import type { DashboardData } from '@/lib/store';
+import { mergeLastGood } from '@/lib/live-data';
 export function useDashboard(date:string) {
  const [data,setData]=useState<DashboardData|null>(null);
  const [error,setError]=useState<string|null>(null);
@@ -16,7 +17,7 @@ export function useDashboard(date:string) {
     if(!response.ok)throw new Error('Local dashboard could not refresh.');
     const next:DashboardData=await response.json();
     if(active){
-     setData(previous => next.warnings.some(w=>w.startsWith('The plan')) && previous?.date===date && previous.plan ? {...next,plan:previous.plan} : next);
+     setData(previous => mergeLastGood(previous,next));
      setError(null);setLoading(false);
     }
    }catch{if(active){setError('Connection interrupted. Showing the last available view; retrying automatically.');setLoading(false);}}

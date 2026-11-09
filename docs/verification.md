@@ -66,3 +66,20 @@
   conflict warnings, explicit demo selection and three-second refresh indication.
 - Browser connector had no available sessions; checks used an isolated headless
   browser with no personal Chrome profile. Screenshots remain local in artifacts/.
+
+## Stage 09 — integration and review
+- Real Claude natural prompt selected the skill; answered questions → proposal →
+  declined save → explicit approval produced expected behavior. No files before
+  agreement; two allowed writes after. Detailed evidence: claude-verification.md.
+- Real Read→Write source attempt was denied by PreToolUse; SHA-256 unchanged.
+  Isolated repeat through npm run test:hook:live also passed (real model, $0.75 cap).
+- Added UserPromptSubmit clock context after detecting stale launch-time metadata;
+  real retry used its fresh timestamp identically in plan and notes.
+- Thirteen unit tests and four production-server browser tests passed. File-to-view
+  refresh ~3.4s; keyboard focus wraps/returns; no overflow at 320/390/768/1440px.
+- Independent reviewer found two P2 issues: transient source errors discarded old
+  data, and task slices hid remaining records. Added failing tests first, then fixed
+  source retention with stale labels and task-list expansion. Whole suite green.
+- Modal keyboard test first failed; native modal plus explicit boundary wrap fixed it.
+- Generated test plans/notes copied to ignored artifacts then removed from runtime
+  data, leaving an honest no-check-in initial state. Protected source files unchanged.

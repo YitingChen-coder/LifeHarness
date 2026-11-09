@@ -20,7 +20,7 @@ try {
  const context = readFileSync(resolve(root,'AGENTS.md'),'utf8') + `\n\nLifeHarness launch context\nActual current time: ${new Date().toISOString()}. Actual Chicago date: ${actualDate}.\nPlanning date: ${date}. Explicit demo mode: ${demo}.\nUse actual current time for confirmation timestamps.\n`;
  const args = ['--append-system-prompt', context, '--tools', tools.join(','), '--allowedTools', tools.join(','), '--setting-sources', 'project', '--settings', resolve(root,'.claude/settings.json'), '--strict-mcp-config', '--mcp-config', '{"mcpServers":{}}'];
  if (check) { console.log(JSON.stringify({date,demo,tools,context,args},null,2)); process.exit(0); }
- for (const file of ['.claude/settings.json','scripts/protect-data.mjs','data/sources/academic.json','data/sources/jobs.json']) if (!existsSync(resolve(root,file))) throw new Error(`Missing ${file}. Complete setup before starting the planner.`);
+ for (const file of ['.claude/settings.json','scripts/protect-data.mjs','scripts/current-context.mjs','data/sources/academic.json','data/sources/jobs.json']) if (!existsSync(resolve(root,file))) throw new Error(`Missing ${file}. Complete setup before starting the planner.`);
  const version = spawnSync('claude',['--version'],{encoding:'utf8'});
  if (version.error) throw new Error('Claude Code is not installed. See README for setup.');
  const match = version.stdout.match(/(\d+)\.(\d+)\.(\d+)/);

@@ -24,14 +24,14 @@ selection and /context require real-session evidence, not static assertions.
 ## Tasks and verification
 
 - [x] 01 Bootstrap: package/config and App Router entrypoints; build, typecheck, HTTP 200.
-- [ ] 02 Architecture: record boundaries, data flow and acceptance criteria; inspect docs.
-- [ ] 03 Sources: academic.json and jobs.json with stable IDs and a realistic week; JSON parse and ID checks.
-- [ ] 04 Context/validation: AGENTS.md, context/*.md, src/lib/schema.ts and dates.ts; tests reject bad references, invalid dates and DST errors.
-- [ ] 05 Skill/launcher: .claude/skills/morning-check-in/SKILL.md and scripts/planner.mjs; verify tools/arguments, explicit context and skill metadata.
-- [ ] 06 Protection: .claude/settings.json and scripts/protect-data.mjs; test blocked edits, overwrite, traversal, symlinks, malformed hook input and allowed plans/notes.
-- [ ] 07 API/polling: src/lib/store.ts, GET /api/dashboard and client polling; temp-directory tests for missing/malformed data and fresh reads.
-- [ ] 08 UI: responsive daily overview, schedule, priorities, deadlines, jobs/prep, timestamps and states; build and visual browser inspection.
-- [ ] 09 Integration: real CLI skill, confirmation/refusal and hook checks; browser refresh and responsiveness; record actual evidence and limitations.
+- [x] 02 Architecture: record boundaries, data flow and acceptance criteria; inspect docs.
+- [x] 03 Sources: academic.json and jobs.json with stable IDs and a realistic week; JSON parse and ID checks.
+- [x] 04 Context/validation: AGENTS.md, context/*.md, src/lib/schema.ts and dates.ts; tests reject bad references, invalid dates and DST errors.
+- [x] 05 Skill/launcher: .claude/skills/morning-check-in/SKILL.md and scripts/planner.mjs; verify tools/arguments, explicit context and skill metadata.
+- [x] 06 Protection: .claude/settings.json and scripts/protect-data.mjs; test blocked edits, overwrite, traversal, symlinks, malformed hook input and allowed plans/notes.
+- [x] 07 API/polling: src/lib/store.ts, GET /api/dashboard and client polling; temp-directory tests for missing/malformed data and fresh reads.
+- [x] 08 UI: responsive daily overview, schedule, priorities, deadlines, jobs/prep, timestamps and states; build and visual browser inspection.
+- [x] 09 Integration: real CLI skill, confirmation/refusal and hook checks; browser refresh and responsiveness; record actual evidence and limitations.
 - [ ] 10 Delivery: README, demo script and final verification report; full npm check, final review, remote consistency.
 
 Tests precede behavior implementation. Contracts: schemas are exported by schema.ts;

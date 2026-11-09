@@ -38,3 +38,11 @@ test('real hook subprocess fails closed on malformed stdin and denies a source m
   assert.equal(JSON.parse(result.stdout).hookSpecificOutput.permissionDecision,'deny');
  }
 });
+test('every user prompt receives a fresh actual timestamp without model command execution',()=>{
+ const result=spawnSync(process.execPath,['scripts/current-context.mjs'],{input:'{}',encoding:'utf8'});
+ assert.equal(result.status,0,result.stderr);
+ const output=JSON.parse(result.stdout).hookSpecificOutput;
+ assert.equal(output.hookEventName,'UserPromptSubmit');
+ const stamp=output.additionalContext.match(/Current actual time: (\S+)/)?.[1];
+ assert.ok(stamp);assert.ok(Math.abs(Date.now()-Date.parse(stamp))<5000);
+});
