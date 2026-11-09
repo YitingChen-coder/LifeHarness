@@ -80,7 +80,7 @@ export default async function Home({
               aria-label="Explore the task board"
             >
               <Image
-                src="/board-preview.png"
+                src="/codex-board-preview.png"
                 alt="LifeHarness task board with To do, In progress and Done columns, a focus timer and task filters"
                 width={1487}
                 height={1058}
@@ -91,7 +91,7 @@ export default async function Home({
             <div className="home-preview-caption">
               <span>One task at a time.</span>
               <span>
-                Powered by Codex Code
+                Powered by Codex
                 <ArrowUpRight size={12} />
               </span>
             </div>

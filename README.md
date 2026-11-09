@@ -61,7 +61,7 @@ records. The source JSON remains read only to both application and planning sess
 
 The supported launcher starts Codex with `data/generated` as its working directory,
 workspace-write sandbox, no extra writable roots, no command network, no escalation,
-and session MCP/plugin restrictions. It first checks that the OS sandbox blocks
+and verified disabled MCP servers, disabled plugin defaults and hook restrictions. It first checks that the OS sandbox blocks
 write-open of a protected source, aborting if this check fails. Hooks allow narrowly
 parsed read commands and validated writes through the helper; arbitrary execution,
 patching and other tool types are denied. Review hook definitions before trusting them.

@@ -15,8 +15,9 @@ original assignment specifies Claude Code. Keep that distinction in the audit.
 ## Safety and interfaces
 
 Codex starts in data/generated with workspace-write, approvals never, command
-network disabled, no additional writable roots, and user MCP servers/plugins
-explicitly disabled for the session. Before launch an OS-sandbox probe must reject
+network disabled, no additional writable roots, and user MCP servers
+explicitly disabled for the session. Plugin defaults are disabled; plugin tool
+calls are denied by the reviewed hook. Before launch an OS-sandbox probe must reject
 write-open of a protected source. Native skill discovery uses .agents/skills.
 Project hooks are reviewed/trusted through Codex /hooks; no hook-trust bypass in
 normal planner launches. An untrusted/missing hook must not grant source writes:

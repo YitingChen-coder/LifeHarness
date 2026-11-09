@@ -107,10 +107,26 @@ try {
       'Could not inspect MCP configuration; refusing an uncontrolled planner launch.',
     );
   for (const server of JSON.parse(mcp.stdout)) {
-    if (typeof server.name !== 'string')
+    if (
+      typeof server.name !== 'string' ||
+      !/^[A-Za-z0-9_-]+$/.test(server.name)
+    )
       throw new Error('Invalid MCP configuration');
-    args.push('-c', `mcp_servers.${JSON.stringify(server.name)}.enabled=false`);
+    const transport =
+      server.transport?.type === 'stdio'
+        ? 'command="node"'
+        : `url=${JSON.stringify(server.transport?.url ?? '')}`;
+    args.push('-c', `mcp_servers.${server.name}={enabled=false,${transport}}`);
   }
+  const disabled = spawnSync('codex', [...args, 'mcp', 'list', '--json'], {
+    encoding: 'utf8',
+    maxBuffer: 1024 * 1024,
+  });
+  if (
+    disabled.status !== 0 ||
+    JSON.parse(disabled.stdout).some((server) => server.enabled !== false)
+  )
+    throw new Error('Could not verify that all MCP servers are disabled.');
   const probe = spawnSync(
     'codex',
     [
