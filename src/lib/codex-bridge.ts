@@ -37,7 +37,7 @@ Ask 1–2 short questions first, then propose a realistic day after the user ans
 Only return JSON matching the output schema: message and draft (null for questions/refusals).
 Never execute tools, write files, send messages, or claim a plan has saved. You cannot save: ONLY the webpage's explicit Confirm & save button persists the displayed draft. Textual confirmation alone is not a save action. A refusal must yield draft:null.
 Use selected Chicago date, 09–18 tasks, lunch12–13 free, exact fixed source timestamps/IDs (all classes and interviews on that date, including conflicts), buffers, and stable task source IDs. Keep completed tasks complete.
-Draft includes summary/priorities/blocks plus carryOver task IDs and factual reflections, retaining relevant previous memory. Break blocks must OMIT sourceId.
+Draft includes summary/priorities/blocks plus carryOver task IDs and factual reflections, retaining relevant previous memory. Break blocks must use sourceId:null; the host omits it when saving.
 The host fills date, timezone, confirmation flag and actual confirmation timestamps only after a button click. Do not invent classes, tasks or saved actions.
 The original terminal skill is reference; its tool and saving instructions are superseded by this browser read-only contract. Show proposed priorities and times in message as well as draft.`;
 
@@ -131,6 +131,11 @@ export const generateWithCodex: GenerateReply = async (input) => {
     fail(error);
     child.kill('SIGTERM');
   };
+  child.stdin.on('error', () =>
+    stop(
+      new Error('Codex connection closed before replying. No plan was saved.'),
+    ),
+  );
   const timer = setTimeout(
     () =>
       stop(
@@ -191,10 +196,19 @@ export const generateWithCodex: GenerateReply = async (input) => {
       )
         finalText = e.params.item.text;
       if (e.method === 'turn/completed') {
-        if (e.params.turn.status !== 'completed')
+        if (e.params.turn.status !== 'completed') {
+          const info = e.params.turn.error?.codexErrorInfo;
+          const code =
+            typeof info === 'string'
+              ? info
+              : info && typeof info === 'object'
+                ? Object.keys(info)[0]
+                : 'unknown';
+          console.warn('[LifeHarness] Codex turn failed:', code);
           throw new Error(
-            'Codex generation failed. Check account allowance and connection. No plan was saved.',
+            `Codex generation failed (${String(code).replace(/[^a-zA-Z]/g, '')}). Check account allowance and connection. No plan was saved.`,
           );
+        }
         const items = e.params.turn.items ?? [];
         const final =
           items.filter((i: any) => i.type === 'agentMessage').at(-1)?.text ??

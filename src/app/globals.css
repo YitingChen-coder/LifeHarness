@@ -2599,3 +2599,351 @@ h1 {
     padding-right: 18px;
   }
 }
+
+/* Browser-native planning conversation */
+.planner-chat {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+.planner-context {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.planner-context h3 {
+  font-size: 23px;
+  margin: 6px 0;
+  color: var(--ink, #211f2b);
+}
+.planner-context p,
+.planner-account-note,
+.planner-footer-note {
+  font-size: 12px;
+  line-height: 1.65;
+  color: #817b92;
+  margin: 0;
+}
+.planner-connection {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff5e6;
+  color: #9b651d;
+  border-radius: 9px;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.planner-connection.connected {
+  background: #edf7f1;
+  color: #277a56;
+}
+.planner-connection svg:last-child {
+  margin-left: auto;
+}
+.connection-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+.planner-history {
+  max-height: 330px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 3px;
+  scrollbar-width: thin;
+}
+.planner-welcome {
+  text-align: center;
+  padding: 20px 12px;
+}
+.planner-welcome .modal-symbol {
+  margin: 0 auto 12px;
+}
+.planner-welcome h3 {
+  font-size: 22px;
+  margin: 8px 0;
+}
+.planner-welcome p {
+  font-size: 14px;
+  color: #817b92;
+  line-height: 1.75;
+  max-width: 390px;
+  margin: 8px auto 18px;
+}
+.planner-prompts {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.planner-prompts button,
+.proposal-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.chat-message {
+  padding: 14px 16px;
+  border-radius: 13px;
+  background: #f5f3fa;
+  max-width: 96%;
+  align-self: flex-start;
+}
+.chat-message.user {
+  background: #ede7ff;
+  align-self: flex-end;
+}
+.chat-speaker {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #817292;
+}
+.chat-message p {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+  line-height: 1.8;
+  margin: 5px 0 0;
+}
+.planner-working {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #76648f;
+  font-size: 12px;
+  line-height: 1.7;
+  padding: 5px;
+}
+.planner-offline,
+.planner-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid #ead4bd;
+  border-radius: 10px;
+  background: #fff9ef;
+  color: #875d2d;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.planner-error p,
+.planner-offline p {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.planner-offline p {
+  margin: 7px 0;
+}
+.planner-error svg,
+.planner-offline svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.planner-saved {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #247950;
+  padding: 10px;
+  background: #edf7f1;
+  border-radius: 10px;
+}
+.planner-proposal {
+  border: 1px solid #dbd0f8;
+  background: #fcfbff;
+  border-radius: 14px;
+  padding: 18px;
+  min-width: 0;
+}
+.proposal-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #7a52c8;
+}
+.planner-proposal h3 {
+  font-size: 18px;
+  line-height: 1.5;
+  margin: 12px 0;
+}
+.proposal-priorities {
+  padding-left: 20px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+.proposal-priorities li {
+  padding-left: 3px;
+  margin: 10px 0;
+}
+.proposal-priorities span {
+  display: block;
+  color: #817b92;
+  font-size: 12px;
+}
+.proposal-blocks {
+  border-top: 1px solid #e8e2f1;
+  max-height: 270px;
+  overflow-y: auto;
+}
+.proposal-blocks > div {
+  display: flex;
+  gap: 14px;
+  border-bottom: 1px solid #eee9f5;
+  padding: 10px 0;
+  font-size: 13px;
+  align-items: flex-start;
+}
+.proposal-blocks time {
+  width: 140px;
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #817b92;
+  line-height: 1.8;
+}
+.proposal-blocks span {
+  overflow-wrap: anywhere;
+}
+.proposal-blocks small {
+  display: block;
+  text-transform: capitalize;
+  font-size: 10px;
+  color: #9b91ac;
+  margin-top: 3px;
+}
+.proposal-memory {
+  font-size: 12px;
+  line-height: 1.7;
+  color: #817b92;
+  margin: 12px 0;
+}
+.proposal-memory summary {
+  cursor: pointer;
+}
+.proposal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 16px 0 10px;
+}
+.planner-composer {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  border: 1px solid #dcd5e9;
+  border-radius: 12px;
+  padding: 10px;
+  background: #fff;
+}
+.planner-composer:focus-within {
+  border-color: #9774eb;
+  box-shadow: 0 0 0 3px #f0eafa;
+}
+.planner-composer textarea {
+  flex: 1;
+  width: 0;
+  resize: vertical;
+  min-height: 45px;
+  max-height: 150px;
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.7;
+  color: #30283d;
+}
+.planner-send {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 9px;
+  background: #7540ed;
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.planner-chat button:disabled,
+.planner-chat textarea:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.planner-footer-note {
+  text-align: center;
+  font-size: 10px;
+}
+@media (max-width: 480px) {
+  .planner-proposal {
+    padding: 12px;
+  }
+  .proposal-actions {
+    flex-wrap: wrap;
+  }
+  .proposal-actions button {
+    flex: 1;
+    padding: 11px 10px;
+    font-size: 12px;
+  }
+  .proposal-blocks time {
+    width: 104px;
+    font-size: 10px;
+  }
+  .planner-history {
+    max-height: 260px;
+  }
+  .planner-context h3 {
+    font-size: 20px;
+  }
+  .planner-welcome {
+    padding: 12px 0;
+  }
+}
+.planner-chat .quiet-btn {
+  border: 1px solid #ddd5eb;
+  border-radius: 9px;
+  padding: 10px 13px;
+  background: #fff;
+  color: #685081;
+  font-size: 12px;
+  cursor: pointer;
+}
+.planner-chat .quiet-btn:hover:not(:disabled) {
+  background: #f5f1fc;
+  border-color: #ae91df;
+}
+.planner-chat .spin {
+  animation: planner-spin 1s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes planner-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .planner-chat .spin {
+    animation: none;
+  }
+}
+.planner-context .eyebrow,
+.proposal-heading .eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  color: #8766bd;
+}

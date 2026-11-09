@@ -18,7 +18,15 @@ const draftSchema = z
   .object({
     summary: planSchema.shape.summary,
     priorities: planSchema.shape.priorities,
-    blocks: planSchema.shape.blocks,
+    blocks: z
+      .array(
+        planSchema.shape.blocks.element.extend({
+          sourceId: planSchema.shape.blocks.element.shape.sourceId
+            .unwrap()
+            .nullable(),
+        }),
+      )
+      .max(60),
     carryOver: notesSchema.shape.carryOver,
     reflections: notesSchema.shape.reflections,
   })
@@ -158,6 +166,9 @@ export class PlannerSession {
         const { carryOver, reflections, ...work } = reply.draft;
         const plan = planSchema.parse({
           ...work,
+          blocks: work.blocks.map(({ sourceId, ...block }) =>
+            sourceId === null ? block : { ...block, sourceId },
+          ),
           date: this.date,
           timezone: 'America/Chicago',
           confirmed: true,

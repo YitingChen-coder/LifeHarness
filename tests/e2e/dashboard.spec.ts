@@ -47,9 +47,7 @@ test('kanban is readable, all tasks searchable, filters and schedule work across
   await page
     .getByRole('button', { name: 'Plan with Codex', exact: true })
     .click();
-  await expect(page.getByRole('dialog')).toContainText(
-    'npm run planner -- --date 2026-11-10',
-  );
+  await expect(page.getByRole('dialog')).toContainText('YOUR DAILY CHECK-IN');
   await page.keyboard.press('Escape');
   for (const width of [1487, 1024, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
@@ -216,8 +214,13 @@ test('source errors retain tasks and dialogs trap and restore keyboard focus', a
   await expect(
     page.getByRole('button', { name: 'Close dialog' }),
   ).toBeFocused();
+  await expect(
+    page.getByRole('textbox', { name: 'Message Codex' }),
+  ).toBeEnabled();
   await page.keyboard.press('Shift+Tab');
-  await expect(page.getByRole('button', { name: 'Got it' })).toBeFocused();
+  await expect(
+    page.getByRole('textbox', { name: 'Message Codex' }),
+  ).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(
     page.getByRole('button', { name: 'Close dialog' }),

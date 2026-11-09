@@ -10,7 +10,6 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
-  Clipboard,
   Clock3,
   Columns3,
   GraduationCap,
@@ -35,6 +34,7 @@ import { newFocus, startFocus, pauseFocus, focusLabel } from '@/lib/focus';
 import { useDashboard } from './use-dashboard';
 import { useFocus } from './use-focus';
 import { Overlay } from './overlay';
+import { PlannerChat } from './planner-chat';
 import { TaskCard } from './task-card';
 const DEMO_DATE = '2026-11-10';
 const columns = [
@@ -56,7 +56,6 @@ export default function Dashboard() {
   const [notice, setNotice] = useState('');
   const [dragId, setDragId] = useState<string | null>(null);
   const [dropStatus, setDropStatus] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
   const { data, error, loading, applyTaskState } = useDashboard(date);
   const timer = useFocus();
   useEffect(() => {
@@ -78,10 +77,6 @@ export default function Dashboard() {
   const running = timerMatches && timer.state.endsAt !== null && remaining > 0;
   const clock = focusLabel(remaining);
   const demo = date !== chicagoDate();
-  const command =
-    date === chicagoDate()
-      ? 'npm run planner'
-      : `npm run planner -- --date ${date}`;
   function changeDate(value: string) {
     if (!validDate(value)) return;
     setDate(value);
@@ -138,15 +133,6 @@ export default function Dashboard() {
     .filter((e) => chicagoDate(new Date(e.start)) >= date)
     .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
   const nextEvent = fixed[0];
-  async function copyCommand() {
-    try {
-      await navigator.clipboard.writeText(command);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-      setNotice('Select the command below and copy it into your terminal.');
-    }
-  }
   return (
     <div className="app-shell">
       <a href="#main" className="skip-link">
@@ -253,7 +239,6 @@ export default function Dashboard() {
             <button
               className="primary-btn plan-button"
               onClick={() => {
-                setCopied(false);
                 setPanel('codex');
               }}
             >
@@ -573,55 +558,7 @@ export default function Dashboard() {
       </div>
       {panel === 'codex' && (
         <Overlay title="Plan with Codex" close={() => setPanel(null)}>
-          <div className="checkin-intro">
-            <span className="modal-symbol">
-              <Sparkles size={27} />
-            </span>
-            <h3>A plan that starts with you.</h3>
-            <p>
-              Codex reads your calendar, tasks and latest progress. Answer a
-              question or two, then confirm your plan.
-            </p>
-          </div>
-          <label className="command-label">
-            Run in your LifeHarness terminal
-          </label>
-          <div className="command-box">
-            <code>{command}</code>
-            <button
-              className="icon-btn"
-              aria-label="Copy command"
-              onClick={() => void copyCommand()}
-            >
-              {copied ? <Check size={18} /> : <Clipboard size={18} />}
-            </button>
-          </div>
-          <p className="copy-feedback" aria-live="polite">
-            {copied
-              ? 'Command copied. Paste it into your terminal.'
-              : 'Then say “Good morning” or “Plan my day”.'}
-          </p>
-          <ol className="checkin-steps">
-            <li>
-              <span>1</span>Start the planner in your terminal.
-            </li>
-            <li>
-              <span>2</span>Review Codex’s priorities and schedule.
-            </li>
-            <li>
-              <span>3</span>Confirm to save. This page updates automatically.
-            </li>
-          </ol>
-          <p className="modal-note">
-            Starting a timer or moving a task doesn’t generate an AI plan.
-          </p>
-          <button
-            className="primary-btn modal-done"
-            onClick={() => setPanel(null)}
-          >
-            Got it
-            <Check size={17} />
-          </button>
+          <PlannerChat key={date} date={date} />
         </Overlay>
       )}
       {panel === 'schedule' && (
