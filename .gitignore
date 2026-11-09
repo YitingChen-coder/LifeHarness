@@ -157,3 +157,6 @@ data/generated/*
 artifacts/
 playwright-report/
 test-results/
+
+# Next-generated declarations are rebuilt by next typegen
+next-env.d.ts

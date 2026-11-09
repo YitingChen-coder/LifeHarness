@@ -1,12 +1,14 @@
 # Verification ledger
 
 ## Stage 01 — bootstrap
+
 - Next.js 16.4.5 installed; npm audit: zero vulnerabilities.
 - Production build and TypeScript check passed; GET / returned HTTP 200.
 - Git history restored from origin/main; normal authenticated Git push works
   with per-command HTTP proxy override. No account settings changed.
 
 ## Stage 02 — architecture
+
 - Reviewed design against the approved plan and ten-stage request.
 - Ruling: work in the supplied freshly restored checkout, preserving main history;
   no additional worktree because this directory is the requested deliverable.
@@ -16,6 +18,7 @@
   agreement is a skill rule and will be reported separately from hook tests.
 
 ## Stage 03 — synthetic sources
+
 - Parsed both JSON files and verified unique record IDs.
 - Academic data: three MPCS courses, five classes, seven tasks.
 - Jobs: five fictional companies, two interviews, five preparation/follow-up tasks.
@@ -23,6 +26,7 @@
 - Generated directory has no fabricated user-confirmed plan.
 
 ## Stage 04 — context and contracts
+
 - Test-first: schema suite initially failed because schema/date modules were absent.
 - Four behavior tests now pass: valid fixtures, duplicate/dangling source records,
   date traversal/impossible dates, Chicago DST boundaries, confirmation field,
@@ -30,6 +34,7 @@
 - AGENTS.md remains short; longer planning and output contracts load on demand.
 
 ## Stage 05 — morning skill and launcher
+
 - Test-first launcher check failed before implementation; now five tests pass.
 - Launcher rejects arbitrary CLI switches, validates demo dates, explicitly appends
   AGENTS.md and exposes only Read/Glob/Grep/Write/Edit/Skill; MCP servers disabled.
@@ -39,6 +44,7 @@
   stage 09, not claimed as passed. Launcher intentionally requires stage 06 hook.
 
 ## Stage 06 — source protection
+
 - Test-first security suite failed before hook modules existed; seven tests now pass.
 - Hook subprocess denies malformed input and an actual source Write payload.
 - Policy tests cover source/config/app writes, traversal, symlink target and parent,
@@ -48,6 +54,7 @@
 - Edit is intentionally blocked: complete JSON must be validated before each write.
 
 ## Stage 07 — read-only API and polling
+
 - Test-first store tests failed before store.ts existed; all nine tests now pass.
 - Store re-reads saved files, rejects symlinks and invalid/traversal dates, distinguishes
   no plan from bad plan, and preserves usable sources when another source is invalid.
@@ -57,6 +64,7 @@
   and labels read/connection warnings. Browser behavior will be checked in stage 09.
 
 ## Stage 08 — responsive dashboard
+
 - Eleven tests passed; production build succeeded, including dynamic GET route.
 - Independent headless Chromium rendered the sample day at 1440x1100 and 390x844;
   screenshots visually reviewed; no horizontal overflow at either size.
@@ -68,6 +76,7 @@
   browser with no personal Chrome profile. Screenshots remain local in artifacts/.
 
 ## Stage 09 — integration and review
+
 - Real Claude natural prompt selected the skill; answered questions → proposal →
   declined save → explicit approval produced expected behavior. No files before
   agreement; two allowed writes after. Detailed evidence: claude-verification.md.
@@ -83,3 +92,22 @@
 - Modal keyboard test first failed; native modal plus explicit boundary wrap fixed it.
 - Generated test plans/notes copied to ignored artifacts then removed from runtime
   data, leaving an honest no-check-in initial state. Protected source files unchanged.
+
+## Stage 10 — delivery
+
+- Added complete English README, first-run screenshot and a four-minute demo script.
+- Documented actual context/skill/hook evidence, cost-bearing optional tests, safety
+  boundaries, sample dates, completion updates and troubleshooting.
+- Formatted implementation and tests for reviewability; formatting check passed.
+- Ignored Next-generated declarations; typecheck now runs next typegen so it works
+  in a fresh checkout. Disabled the development overlay for a clear demo view.
+- Added a failing missing-date-argument regression test, then fixed the launcher;
+  all thirteen unit tests passed again.
+- Final npm run check passed: type generation, TypeScript, 13 tests and production build.
+- Final four Playwright tests passed against the production server. Measured
+  file-to-browser refresh 3390ms. Source SHA-256 check passed; no generated test
+  plans or notes remain in runtime data. Dependency audit reported zero vulnerabilities.
+- Final independent review findings were fixed in stage 09 with regression tests;
+  no deferred reviewer findings remain. Existing main history preserved, no force pushes.
+- User-authorized integration: ten sequential verified phase commits to main,
+  with a push after each. No additional merge/PR approval step is needed.

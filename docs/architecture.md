@@ -6,13 +6,13 @@ cloud deployment, external calendar write access, or embedded chat is required.
 
 ## Boundaries
 
-| Area | Responsibility | Planner access |
-| --- | --- | --- |
-| data/sources | Synthetic academic and job-search records | Read only |
-| AGENTS.md, context | Short standing rules and on-demand references | Read only |
-| .claude, scripts | Discoverable morning skill and safety enforcement | Read only |
-| data/generated | Confirmed daily plans and notes | Read/write, validated by hook |
-| src/app, src/lib | Dashboard, GET API, schema and date handling | Read only |
+| Area               | Responsibility                                    | Planner access                |
+| ------------------ | ------------------------------------------------- | ----------------------------- |
+| data/sources       | Synthetic academic and job-search records         | Read only                     |
+| AGENTS.md, context | Short standing rules and on-demand references     | Read only                     |
+| .claude, scripts   | Discoverable morning skill and safety enforcement | Read only                     |
+| data/generated     | Confirmed daily plans and notes                   | Read/write, validated by hook |
+| src/app, src/lib   | Dashboard, GET API, schema and date handling      | Read only                     |
 
 Sources → Claude reads sources and notes → asks 1–2 questions → proposes a
 schedule → waits for explicit agreement → writes a dated plan and notes →

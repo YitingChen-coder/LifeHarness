@@ -6,14 +6,16 @@
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "next typegen && tsc --noEmit",
     "test": "tsx --test tests/*.test.ts",
     "check": "npm run typecheck && npm test && npm run build",
     "planner": "node scripts/planner.mjs",
     "planner:demo": "node scripts/planner.mjs --date 2026-11-10",
     "test:e2e": "npm run build && playwright test",
     "test:safety": "node scripts/verify-safety.mjs",
-    "test:hook:live": "node scripts/test-live-hook.mjs"
+    "test:hook:live": "node scripts/test-live-hook.mjs",
+    "format": "prettier --write src scripts tests context docs AGENTS.md README.md package.json tsconfig.json next.config.ts postcss.config.mjs playwright.config.ts .claude",
+    "format:check": "prettier --check src scripts tests context docs AGENTS.md README.md package.json tsconfig.json next.config.ts postcss.config.mjs playwright.config.ts .claude"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",
@@ -28,8 +30,12 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
+    "prettier": "^3.9.10",
     "tailwindcss": "^4.0.0",
     "tsx": "^4.20.0",
     "typescript": "^5.9.0"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }

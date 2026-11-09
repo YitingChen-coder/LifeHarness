@@ -32,7 +32,7 @@ selection and /context require real-session evidence, not static assertions.
 - [x] 07 API/polling: src/lib/store.ts, GET /api/dashboard and client polling; temp-directory tests for missing/malformed data and fresh reads.
 - [x] 08 UI: responsive daily overview, schedule, priorities, deadlines, jobs/prep, timestamps and states; build and visual browser inspection.
 - [x] 09 Integration: real CLI skill, confirmation/refusal and hook checks; browser refresh and responsiveness; record actual evidence and limitations.
-- [ ] 10 Delivery: README, demo script and final verification report; full npm check, final review, remote consistency.
+- [x] 10 Delivery: README, demo script and final verification report; full npm check, final review, remote consistency.
 
 Tests precede behavior implementation. Contracts: schemas are exported by schema.ts;
 chicagoDate(now) and validDate(input) by dates.ts; loadDashboard(root,date) by

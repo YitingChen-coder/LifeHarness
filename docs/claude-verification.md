@@ -7,17 +7,17 @@ paths and session metadata. The table below records observed behavior, not merel
 what the skill promises. The natural-language flow was a synthetic integration
 test and its generated plan/notes were removed afterward to leave a clean first-run state.
 
-| Check | Actual observation |
-| --- | --- |
-| Context | Launched with `npm run planner:demo`. `/context` displayed system prompt, 447 tokens of memory files and skills; `/context all` listed morning-check-in. `/memory` explicitly listed AGENTS.md. Launcher also supplies its contents through `--append-system-prompt`. No project CLAUDE.md exists. |
-| Discovery | A plain `Good morning` produced a Skill tool call for `morning-check-in`, then Read calls for both sources and a Glob for previous plans. |
-| Questions | Claude asked how much demo work remained and whether to combine graph practice. No Write calls occurred. |
-| Proposal | After availability answers and “do not save anything yet”, Claude displayed priorities and a timed schedule and asked for agreement. No Write calls occurred. |
-| Decline | “Not yet. Do not save the plan or update notes” produced an acknowledgement; generated JSON files remained absent. |
-| Confirm | Explicit approval of the displayed synthetic plan produced two successful Write calls: dated plan, then notes. Both received an allow decision from the actual PreToolUse hook. Plan contained 14 blocks and 4 priorities, with fixed classes preserved and lunch free. |
-| Fresh clock | First run exposed a stale launch-time timestamp. Added UserPromptSubmit clock context. A real subsequent confirmation used the fresh timestamp for both plan and notes, verified equal on disk. |
-| Hook denial | Diagnostic real Claude session first Read academic.json, then attempted Write with `{}`. Actual PreToolUse returned deny: `Protected file: write only dated plans or notes.json under data/generated`. SHA-256 was unchanged. |
-| Isolated repeat | `npm run test:hook:live` repeated the real Read→Write attempt in a disposable copied fixture. Received a real hook deny event and verified its source hash unchanged. |
+| Check           | Actual observation                                                                                                                                                                                                                                                                                 |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Context         | Launched with `npm run planner:demo`. `/context` displayed system prompt, 447 tokens of memory files and skills; `/context all` listed morning-check-in. `/memory` explicitly listed AGENTS.md. Launcher also supplies its contents through `--append-system-prompt`. No project CLAUDE.md exists. |
+| Discovery       | A plain `Good morning` produced a Skill tool call for `morning-check-in`, then Read calls for both sources and a Glob for previous plans.                                                                                                                                                          |
+| Questions       | Claude asked how much demo work remained and whether to combine graph practice. No Write calls occurred.                                                                                                                                                                                           |
+| Proposal        | After availability answers and “do not save anything yet”, Claude displayed priorities and a timed schedule and asked for agreement. No Write calls occurred.                                                                                                                                      |
+| Decline         | “Not yet. Do not save the plan or update notes” produced an acknowledgement; generated JSON files remained absent.                                                                                                                                                                                 |
+| Confirm         | Explicit approval of the displayed synthetic plan produced two successful Write calls: dated plan, then notes. Both received an allow decision from the actual PreToolUse hook. Plan contained 14 blocks and 4 priorities, with fixed classes preserved and lunch free.                            |
+| Fresh clock     | First run exposed a stale launch-time timestamp. Added UserPromptSubmit clock context. A real subsequent confirmation used the fresh timestamp for both plan and notes, verified equal on disk.                                                                                                    |
+| Hook denial     | Diagnostic real Claude session first Read academic.json, then attempted Write with `{}`. Actual PreToolUse returned deny: `Protected file: write only dated plans or notes.json under data/generated`. SHA-256 was unchanged.                                                                      |
+| Isolated repeat | `npm run test:hook:live` repeated the real Read→Write attempt in a disposable copied fixture. Received a real hook deny event and verified its source hash unchanged.                                                                                                                              |
 
 The first diagnostic attempted Write without Read, which Claude's built-in
 read-before-overwrite guard rejected before the hook. That was **not** counted as
