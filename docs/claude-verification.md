@@ -52,3 +52,12 @@ application details, modal keyboard focus/return, 320/390/768/1440px layouts,
 file-to-view refresh, malformed plan retention, source failure retention, connection
 recovery and completed task display. File-to-view refresh measured about 3.4 seconds.
 Fixtures are explicitly synthetic and restored/removed after each test.
+
+## Task-board revision
+
+The real-model evidence above describes the original planning harness and was not
+re-run as a new paid model test for the visual redesign. The revised skill also
+reads human-owned data/user/task-state.json; its write remains blocked by the same
+generated-output allowlist. Current UI behavior is covered by 24 unit tests and
+seven production-browser tests (including persistence, drag/drop, timer, job tracker,
+error retention and keyboard focus). See the latest verification ledger for results.

@@ -23,7 +23,8 @@ Claude Code is the planning harness. The dashboard is a local, read-only view.
 These are two synthetic sources: my academic calendar/tasks and job applications,
 interviews and prep. No database or deployment is needed.”
 
-Point to today's fixed classes, deadlines and next interview. Explain Sample day
+Point to the three task lanes, search and filters. Open Schedule for fixed classes
+and the briefcase drawer for application statuses and interviews. Explain Sample day
 is explicitly November 10; the real default is today's Chicago date.
 
 ## 0:30–1:00 — What loads when
@@ -53,8 +54,9 @@ When the proposal appears, type **“Not yet. Don't save the plan or notes.”**
 Point out that the dashboard still has no confirmed priorities.
 Then type **“Yes, save the displayed plan and update notes.”**
 
-Watch the dashboard update without manual reload. Point to confirmed priorities,
-time blocks and last check-in time. Say: “Only after confirmation does the agent
+Watch the board confirmation indicator update without manual reload. Open Schedule
+and point to confirmed priorities, time blocks and the last check-in time. Close it,
+move a task into In progress and briefly start/pause the 25-minute focus timer. Say: “Only after confirmation does the agent
 write the dated plan and its notes. The page polls local JSON every three seconds.”
 
 ## 2:45–3:45 — Decides versus enforces

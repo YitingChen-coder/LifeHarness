@@ -47,7 +47,9 @@ export default function Dashboard() {
   const [domain, setDomain] = useState<'all' | 'academic' | 'career'>('all');
   const [query, setQuery] = useState('');
   const [due, setDue] = useState<'all' | 'today' | 'urgent'>('all');
-  const [panel, setPanel] = useState<'schedule' | 'claude' | null>(null);
+  const [panel, setPanel] = useState<'schedule' | 'claude' | 'career' | null>(
+    null,
+  );
   const [detailId, setDetailId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -182,8 +184,11 @@ export default function Dashboard() {
             className={
               domain === 'career' ? 'rail-button active' : 'rail-button'
             }
-            aria-label="Job search board"
-            onClick={() => setDomain('career')}
+            aria-label="Open job tracker"
+            onClick={() => {
+              setDomain('career');
+              setPanel('career');
+            }}
           >
             <BriefcaseBusiness size={25} />
           </button>
@@ -712,6 +717,72 @@ export default function Dashboard() {
               </p>
             )}
           </div>
+        </Overlay>
+      )}
+      {panel === 'career' && (
+        <Overlay drawer title="Job search" close={() => setPanel(null)}>
+          <p className="drawer-subtitle">
+            Applications, interviews and your next steps.
+          </p>
+          <div className="career-summary">
+            <div>
+              <strong>{view?.applications.active ?? 0}</strong>
+              <span>active applications</span>
+            </div>
+            <div>
+              <strong>{view?.applications.interviewing ?? 0}</strong>
+              <span>interviewing</span>
+            </div>
+          </div>
+          <h3 className="drawer-section-label">Upcoming interviews</h3>
+          <div className="upcoming-list">
+            {(data?.jobs?.interviews ?? [])
+              .filter((e) => chicagoDate(new Date(e.start)) >= date)
+              .map((e) => (
+                <div key={e.id}>
+                  <CalendarDays size={18} />
+                  <div>
+                    <strong>{e.title}</strong>
+                    <p>
+                      {dateLabel(chicagoDate(new Date(e.start)))} ·{' '}
+                      {timeLabel(e.start)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            {!(data?.jobs?.interviews ?? []).some(
+              (e) => chicagoDate(new Date(e.start)) >= date,
+            ) && (
+              <p className="drawer-empty">
+                No upcoming interviews in your tracker.
+              </p>
+            )}
+          </div>
+          <h3 className="drawer-section-label">All applications</h3>
+          <div className="application-list">
+            {(data?.jobs?.applications ?? []).map((app) => (
+              <div key={app.id}>
+                <section>
+                  <strong>{app.company}</strong>
+                  <p>{app.role}</p>
+                  <small>Applied {app.appliedOn}</small>
+                </section>
+                <span className={`application-badge ${app.status}`}>
+                  {app.status}
+                </span>
+              </div>
+            ))}
+            {!data?.jobs && (
+              <p className="drawer-empty">
+                Your job tracker is unavailable. Check the source warning on the
+                board.
+              </p>
+            )}
+          </div>
+          <p className="modal-note">
+            Application statuses come from your protected tracker. Task progress
+            is managed on the board.
+          </p>
         </Overlay>
       )}
       {currentDetail && (

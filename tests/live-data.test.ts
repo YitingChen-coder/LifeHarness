@@ -30,3 +30,18 @@ test('partial source reads retain last good source data with an explicit stale w
   );
   assert.equal(mergeLastGood(previous, previous).warnings.length, 0);
 });
+test('unreadable completion history never replaces a newer known completion with an older record', () => {
+  const prior = {
+    ...previous,
+    completedHistory: { 'task-algo': '2026-11-10T11:00:00Z' },
+  };
+  const next = {
+    ...previous,
+    completedHistory: { 'task-algo': '2026-11-09T11:00:00Z' },
+    warnings: ['Some saved plans could not be read for completion history.'],
+  };
+  assert.equal(
+    mergeLastGood(prior, next).completedHistory?.['task-algo'],
+    '2026-11-10T11:00:00Z',
+  );
+});

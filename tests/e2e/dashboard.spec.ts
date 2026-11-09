@@ -82,6 +82,19 @@ test('manual states persist across reload and drag-drop without altering sources
       .getByRole('region', { name: 'In progress column' })
       .getByRole('article'),
   ).toHaveCount(1);
+  await page.setViewportSize({ width: 320, height: 850 });
+  const phoneCard = page.getByRole('article', {
+    name: 'Record & submit LifeHarness demo',
+    exact: true,
+  });
+  const cardBox = await phoneCard.boundingBox();
+  const actionBox = await phoneCard
+    .getByRole('button', { name: 'Mark done', exact: true })
+    .boundingBox();
+  expect(actionBox!.x + actionBox!.width).toBeLessThanOrEqual(
+    cardBox!.x + cardBox!.width + 1,
+  );
+  await page.setViewportSize({ width: 1280, height: 720 });
   await page
     .getByRole('article', {
       name: 'Record & submit LifeHarness demo',
@@ -211,4 +224,49 @@ test('source errors retain tasks and dialogs trap and restore keyboard focus', a
   ).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(opener).toBeFocused();
+});
+test('job tracker keeps application statuses and upcoming interviews accessible', async ({
+  page,
+}) => {
+  await page.goto('/?date=2026-11-10');
+  await expect(
+    page.getByRole('button', { name: 'Open job tracker', exact: true }),
+  ).toBeVisible({ timeout: 1000 });
+  await page
+    .getByRole('button', { name: 'Open job tracker', exact: true })
+    .click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog).toContainText('Northstar Labs');
+  await expect(dialog).toContainText('Atlas Studio');
+  await expect(dialog).toContainText('rejected');
+  await expect(dialog).toContainText('Northstar · technical interview');
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+test('failed status save leaves the task unchanged and shows a recoverable error', async ({
+  page,
+}) => {
+  await page.goto('/?date=2026-11-10');
+  await page.route('**/api/tasks', (route) =>
+    route.fulfill({
+      status: 500,
+      json: { error: 'Could not save progress. Please retry.' },
+    }),
+  );
+  await page
+    .getByRole('article', {
+      name: 'Record & submit LifeHarness demo',
+      exact: true,
+    })
+    .getByLabel('Task status')
+    .selectOption('done');
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'Could not save progress' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'To do column' }).getByRole('article', {
+      name: 'Record & submit LifeHarness demo',
+      exact: true,
+    }),
+  ).toBeVisible();
 });

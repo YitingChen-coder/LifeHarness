@@ -139,3 +139,24 @@
 - 23 unit tests and typecheck passed. Five production browser tests passed, including
   drag/drop, persistence, timer, filtering, responsive widths, plan refresh (~3.4s),
   stale states and keyboard focus. Final visual/documentation pass follows.
+
+## Task board redesign — checkpoint 3
+
+- Visual QA passed after equal-size source/implementation and focused card comparisons;
+  see design-qa.md and docs/design/task-board-comparison.png. Phone capture reviewed.
+- Added a separate job-tracker drawer with all five applications and interviews,
+  preserving career information without adding clutter to the main task board.
+- Added regression coverage for failed status saves and older completion history
+  during malformed reads; newer known completion is retained.
+- Final checks: 24 unit tests, type generation, TypeScript, production build, seven
+  production browser tests, safety-hook/source-hash check, formatting and diff check passed.
+- Browser checks include 320px in-progress completion action visibility, drag/drop,
+  reload persistence, timer behavior, filters, jobs, focus management and plan refresh
+  (3410ms in the final run). No test progress/plan fixture remains on disk.
+- Protected source files are byte-identical to the pre-redesign commit. Source SHA-256:
+  academic 2705c5366bf93c6b2c1665846eed64dade7ccc65984e2e6f692aaf45efc39463;
+  jobs ddac94ecf6b2da0fdfed1d1336f5a03f6b0d888e8be6e40eaeb8735a55f21bbe.
+- README/demo now explain direct task status changes, the independent human progress
+  file, focus timing, protected sources, job drawer and continued Claude confirmation.
+- All reviewer P2 findings fixed with regressions. P3: minor source/fallback-font and
+  icon-size differences documented in design-qa.md; no remaining blocker.

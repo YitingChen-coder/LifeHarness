@@ -17,6 +17,10 @@ export function mergeLastGood(
     next.warnings.some((w) => w.startsWith('The plan')) ||
     !next.academic ||
     !next.jobs;
+  const history = { ...previous.completedHistory };
+  for (const [id, stamp] of Object.entries(next.completedHistory ?? {}))
+    if (!history[id] || Date.parse(stamp) > Date.parse(history[id]))
+      history[id] = stamp;
   return {
     ...next,
     completedHistory:
@@ -27,7 +31,7 @@ export function mergeLastGood(
       ) ||
       !next.academic ||
       !next.jobs
-        ? { ...previous.completedHistory, ...next.completedHistory }
+        ? history
         : next.completedHistory,
     taskState:
       Date.parse(previous.fetchedAt) > Date.parse(next.fetchedAt)

@@ -3,7 +3,8 @@
 **A little structure. A clearer day.**
 
 A local-first daily planning harness for UChicago MPCS 51238, Design, Build, Ship.
-Claude Code helps you plan; a live Next.js dashboard shows the day you confirm.
+Move work through To do, In progress and Done on a focused task board.
+Claude Code helps you plan; the schedule drawer shows the day you confirm.
 Original calendar and job-search data stay protected.
 
 ![LifeHarness sample day dashboard](docs/images/dashboard.png)
@@ -35,7 +36,7 @@ within three seconds and within five seconds in the browser integration test.
 Declining a proposal saves neither a plan nor notes.
 
 The dashboard does not run Claude or spend model credits. The planner uses your
-Claude subscription/account. Generated plans and notes stay local and are gitignored.
+Claude subscription/account. Generated plans, notes and task progress stay local and are gitignored.
 
 ## Try the sample week
 
@@ -47,7 +48,8 @@ The dashboard defaults to the real current date in **America/Chicago**.
    http://127.0.0.1:3000/?date=2026-11-10.
 2. Start `npm run planner:demo` in your terminal.
 3. Say “Good morning”, answer the questions and confirm the displayed plan.
-4. Watch priorities, time blocks and the last check-in timestamp appear.
+4. Open **Schedule** to see confirmed priorities and time blocks. The board shows
+   the last check-in and keeps completion consistent across dates.
 
 For a different date, use `npm run planner -- --date 2026-11-12` and select the
 same date in the page. November 12 includes a fixed class/interview conflict.
@@ -55,8 +57,27 @@ A demo date changes the planning date, never the real confirmation clock.
 
 Default preferences: work 09:00–18:00; lunch 12:00–13:00; fixed classes/interviews
 stay fixed even outside that window. Hard deadlines and interview prep come first.
-Tasks are marked completed by asking Claude to revise the plan, then confirming
-that revision. The dashboard itself is read-only.
+Move tasks by dragging the grip into another column, choosing a status, or using
+**Start task / Mark done / Reopen**. Changes persist independently of source files.
+You can also confirm completed tasks through Claude. A newer explicit manual update
+wins over an older plan; newer confirmed completion is remembered across dates.
+
+## Use the task board
+
+- **All tasks / Coursework / Job search:** switch domains; search task names,
+  course codes, course names and companies. Deadline filtering narrows the board.
+- **Focus now:** start a 25-minute timer, pause/resume or reset it. The deadline
+  survives a browser reload. Finishing a timer never silently completes the task.
+- **Task title:** open details with full deadline and a status selector.
+- **Schedule:** view fixed classes, interviews, conflicts and a confirmed AI plan.
+- **Briefcase icon:** open all job applications/statuses and upcoming interviews.
+- **Plan with Claude:** copy the selected-date terminal command and run it; this
+  button does not pretend to be a browser-hosted AI conversation.
+
+Desktop columns scroll independently. On small screens the lanes stack vertically.
+Task progress is stored in `data/user/task-state.json` (local, gitignored), which
+Claude may read but cannot edit. The timer stays in browser storage. Neither changes
+original academic/job-search records or sends messages/applications.
 
 ## What loads when
 
@@ -67,6 +88,7 @@ that revision. The dashboard itself is read-only.
 | `context/output-format.md`, `src/lib/schema.ts` | Exact output contract, read before saving.                                                                                    |
 | `.claude/skills/morning-check-in/SKILL.md`      | Trigger description is discoverable; full skill loads when Claude selects it from a natural morning request.                  |
 | `.claude/settings.json`                         | Registers the source-protection hook and a fresh clock hook.                                                                  |
+| `data/user/task-state.json`                     | Human progress, read at check-in and protected from agent writes.                                                             |
 | `data/generated/notes.json` and dated plans     | Confirmed carryover and memory, read on later check-ins.                                                                      |
 
 Run `/context all` inside the launched session to inspect context and the skill
@@ -106,7 +128,7 @@ Development and Git commands run in a separate developer terminal.
 | `npm test`                   | Schema, dates/DST, storage, state retention, policy and launcher tests                                       |
 | `npm run test:safety`        | Run the actual hook process with a simulated forbidden Write; verify source SHA-256 unchanged; no model cost |
 | `npm run test:hook:live`     | Optional real Claude Read→Write test in a disposable fixture; budget capped at $0.75                         |
-| `npm run test:e2e`           | Build and run four headless browser tests against a production server on port 3100                           |
+| `npm run test:e2e`           | Build and run seven headless browser tests against a production server on port 3100                          |
 | `npm run check`              | Generate types, typecheck, unit tests and production build                                                   |
 | `npm run format:check`       | Check source/document formatting                                                                             |
 | `npm run build && npm start` | Production local dashboard                                                                                   |
@@ -118,7 +140,7 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Tests back up and restore their synthetic generated-plan fixture. They do not
+Tests back up and restore their generated-plan and human-progress fixtures. They do not
 change protected source files. For an existing compatible Chromium binary, set
 `PLAYWRIGHT_CHROMIUM_EXECUTABLE` to its executable path. Live-model checks are
 optional and require login; normal unit/browser tests do not call a model.
@@ -136,6 +158,7 @@ context/                   On-demand planning/output references
 .claude/settings.json       PreToolUse and UserPromptSubmit hooks
 data/sources/              Protected academic.json and jobs.json
 data/generated/            Local YYYY-MM-DD.json plans and notes.json
+data/user/                 Human-owned task-state.json progress
 scripts/                   Restricted launcher and safety checks
 src/app/                   Dashboard and read-only GET /api/dashboard
 src/lib/                   Schemas, Chicago dates, store, view/state helpers
@@ -144,7 +167,10 @@ docs/                      Architecture, evidence and demo instructions
 ```
 
 The API accepts only an optional `date=YYYY-MM-DD`, validates it, reads files
-freshly and sends `Cache-Control: no-store`. POST and other mutations are unsupported.
+freshly and sends `Cache-Control: no-store`. `GET /api/dashboard` remains read-only.
+A separate `POST /api/tasks` accepts only `{id, status}` for a known task, validates
+same-origin loopback requests and atomically saves human-owned progress. There is
+no endpoint to modify sources or automatically approve AI-generated plans.
 The browser polls every three seconds. Missing/invalid source files produce warnings;
 if a previously valid view exists it is retained and labeled stale. Invalid plans
 retain the last valid in-browser plan. No plan is displayed as confirmed on first run.
