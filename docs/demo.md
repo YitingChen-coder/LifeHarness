@@ -19,7 +19,7 @@ AI output. If model latency is high, shorten narration rather than skip confirma
 ## 0:00–0:30 — What it does
 
 Say: “LifeHarness helps me plan coursework and a software engineering job search.
-Claude Code is the planning harness. The dashboard is a local, read-only view.
+Claude Code is the planning harness. The local dashboard shows my plan and lets me track task progress. Original calendar and tracker data remain read-only.
 These are two synthetic sources: my academic calendar/tasks and job applications,
 interviews and prep. No database or deployment is needed.”
 

@@ -41,6 +41,7 @@ try {
   const args = [
     '--append-system-prompt',
     context,
+    '--no-chrome',
     '--tools',
     tools.join(','),
     '--allowedTools',

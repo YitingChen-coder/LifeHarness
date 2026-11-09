@@ -22,6 +22,7 @@ test('launcher only accepts a validated explicit date and emits a restricted con
   assert.match(config.context, /LifeHarness daily planner/);
   assert.match(config.context, /2026-11-10/);
   assert.equal(config.args.includes('--strict-mcp-config'), true);
+  assert.equal(config.args.includes('--no-chrome'), true);
   assert.equal(config.args.includes('--append-system-prompt'), true);
   for (const args of [
     ['--check', '--date'],

@@ -172,3 +172,17 @@
   320/390/768/1487px. Desktop/phone screenshots inspected; no page errors observed.
 - Final type generation, TypeScript, 24 unit tests, production build, formatting and
   diff check passed. Protected source files and user progress were not changed.
+
+## Assignment requirement audit
+
+- Compared current implementation against the original four-page assignment.
+- Re-ran typecheck, 24 unit tests, production build and eight browser tests: passed.
+- Re-tested real Claude skill selection, source/notes/progress reads and no premature
+  writes in a disposable fixture. Re-tested real hook denial and unchanged hash.
+- Verified current interactive /context all skill listing and /memory AGENTS.md entry.
+- Added --no-chrome to suppress an unrelated browser-integration startup prompt;
+  failing regression assertion preceded fix, then unit/type checks and interactive
+  startup passed. Updated narration to distinguish human progress from protected data.
+- Added assignment-audit.md: technical requirements supported; recording, Slack post
+  and Classroom link remain the student's work. Documented Codex/Claude authorship
+  distinction and earlier-vs-current live-test scope rather than claiming new proof.

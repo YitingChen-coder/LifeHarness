@@ -61,3 +61,14 @@ reads human-owned data/user/task-state.json; its write remains blocked by the sa
 generated-output allowlist. Current UI behavior is covered by 24 unit tests and
 seven production-browser tests (including persistence, drag/drop, timer, job tracker,
 error retention and keyboard focus). See the latest verification ledger for results.
+
+## Assignment audit refresh — November 8, 2026
+
+Current real-Claude isolated audit again selected morning-check-in from only
+“Good morning”, read academic/jobs/user-progress/prior-notes files, retained a done
+task and asked two questions without writing data. Raw evidence is ignored under
+artifacts/assignment-claude-morning.jsonl with a sanitized Boolean summary beside it.
+The positive multi-turn save above is earlier evidence, not a new audit claim.
+Current live hook fixture test again returned deny and unchanged source SHA-256.
+Current browser suite has eight tests. See assignment-audit.md for requirement mapping
+and the remaining recording/submission work.
