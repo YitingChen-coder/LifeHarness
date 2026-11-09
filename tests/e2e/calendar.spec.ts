@@ -9,6 +9,9 @@ test('calendar opens directly beside the assistant, positions real events at the
   await expect(calendar).toBeVisible();
   await expect(panel).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: 'Open schedule', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'true');
   const event = calendar
     .getByRole('button', { name: /^Algorithms, 10:30 AM to 11:50 AM/ })
     .first();
@@ -37,6 +40,13 @@ test('calendar opens directly beside the assistant, positions real events at the
   ).toBeVisible();
   await page.getByRole('button', { name: 'Tasks', exact: true }).click();
   await expect(page.getByRole('article')).toHaveCount(12);
+  await expect(
+    page.getByRole('button', { name: 'Open schedule', exact: true }),
+  ).toHaveAttribute('aria-pressed', 'false');
+  await page
+    .getByRole('button', { name: 'Coursework board', exact: true })
+    .click();
+  await expect(page.getByRole('article')).toHaveCount(7);
   await expect(panel).toBeVisible();
   await page.getByRole('button', { name: 'Calendar', exact: true }).click();
   await expect(calendar).toBeVisible();

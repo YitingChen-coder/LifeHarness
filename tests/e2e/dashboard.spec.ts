@@ -195,7 +195,7 @@ test('confirmed plans refresh, invalid reads and connection failures retain last
     else if (existsSync(file)) unlinkSync(file);
   }
 });
-test('source errors retain tasks and dialogs trap and restore keyboard focus', async ({
+test('source errors retain tasks and the assistant does not block navigation', async ({
   page,
   request,
 }) => {
@@ -290,9 +290,7 @@ test('homepage introduces LifeHarness and enters the board with working back nav
   await expect(
     page.getByRole('heading', { name: 'LifeHarness.', exact: true }),
   ).toBeVisible({ timeout: 1000 });
-  await page
-    .getByRole('link', { name: 'Open task board', exact: true })
-    .click();
+  await page.getByRole('link', { name: 'Open calendar', exact: true }).click();
   await expect(page).toHaveURL(/\/board$/);
   await expect(
     page.getByRole('heading', { name: 'Your calendar', exact: true }),

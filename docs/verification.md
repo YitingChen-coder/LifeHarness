@@ -1,4 +1,28 @@
-# Browser Codex verification — November 9, 2026
+# Calendar-first verification — November 9, 2026
+
+- 37 unit/security tests pass, including calendar dates across DST/year boundaries,
+  seven-day saved-plan reads, fixed-event deduplication, preview replacement,
+  overlap lanes and current completion/manual task-state precedence.
+- 15 browser tests pass: nonmodal assistant beside the calendar, real event pixel
+  placement, Day/Week/date navigation, overlap details, in-calendar unsaved preview,
+  refusal and explicit confirmation, immediate confirmed refresh, stale-week recovery,
+  phone Day view and all preserved task/chat regression behavior.
+- TypeScript, production build and formatting pass. Source hashes below are unchanged.
+- Fresh before captures show the former board and blocking modal; current captures
+  show the actual calendar and persistent panel. An event-position arithmetic bug
+  found visually was corrected and covered by a browser position assertion.
+- Independent review found completion-state and selected-day detail inconsistencies.
+  Calendar entries now use task-board precedence and day changes clear unrelated
+  details. Native account bridge and confirmation enforcement remain unchanged.
+
+Current captures: images/calendar-workspace.png, images/calendar-assistant.png,
+images/calendar-mobile.png and images/calendar-assistant-mobile.png. Before captures
+are local under artifacts/calendar-before. Visual review is not a claim of full
+accessibility compliance; key labels, keyboard navigation and error states are tested.
+
+## Earlier browser-bridge acceptance evidence
+
+### Browser Codex verification — November 9, 2026
 
 Browser planning is now the primary workflow. Prior terminal-only reports are
 archived; their pending connection results do not describe this successful run.

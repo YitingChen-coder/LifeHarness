@@ -347,7 +347,7 @@ export function CalendarView({
                   <button
                     key={event.id}
                     title={`${event.title} · ${timeLabel(event.start)}–${timeLabel(event.end)}`}
-                    className={`calendar-event ${event.lanes > 1 ? 'narrow' : ''} ${event.kind} ${event.draft ? 'draft' : ''} ${event.conflict ? 'conflict' : ''} ${event.status === 'completed' ? 'completed' : ''}`}
+                    className={`calendar-event ${event.endMinute - event.startMinute <= 30 ? 'short' : ''} ${event.endMinute - event.startMinute < 25 ? 'tiny' : ''} ${event.lanes > 1 ? 'narrow' : ''} ${event.kind} ${event.draft ? 'draft' : ''} ${event.conflict ? 'conflict' : ''} ${event.status === 'completed' ? 'completed' : ''}`}
                     style={{
                       top:
                         ((event.startMinute - startHour * 60) / 60) *

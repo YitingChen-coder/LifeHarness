@@ -4116,3 +4116,29 @@ h1 {
   font-size: 10px;
   color: #7e6b91;
 }
+.calendar-event.short {
+  padding: 3px 5px;
+  gap: 0;
+  justify-content: center;
+}
+.calendar-event.short strong {
+  font-size: 10px;
+  line-height: 1.1;
+  display: block;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.calendar-event.short > span {
+  font-size: 8px;
+  line-height: 1;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.calendar-event.short small,
+.calendar-event.tiny > span {
+  display: none;
+}

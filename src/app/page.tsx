@@ -56,7 +56,7 @@ export default async function Home({
             </p>
             <div className="home-actions">
               <Link href="/board" className="home-primary">
-                Open task board
+                Open calendar
                 <ArrowRight size={20} />
               </Link>
               <Link href="/board?date=2026-11-10" className="home-secondary">
@@ -77,11 +77,11 @@ export default async function Home({
             <Link
               href="/board"
               className="home-preview-link"
-              aria-label="Explore the task board"
+              aria-label="Explore the calendar workspace"
             >
               <Image
-                src="/codex-board-preview.png"
-                alt="LifeHarness task board with To do, In progress and Done columns, a focus timer and task filters"
+                src="/calendar-workspace-preview.png"
+                alt="LifeHarness weekly calendar showing classes, interviews and a planning assistant on the right"
                 width={1487}
                 height={1058}
                 priority
@@ -89,7 +89,7 @@ export default async function Home({
               />
             </Link>
             <div className="home-preview-caption">
-              <span>One task at a time.</span>
+              <span>Your week, in one place.</span>
               <span>
                 Powered by Codex
                 <ArrowUpRight size={12} />

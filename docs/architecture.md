@@ -1,7 +1,8 @@
 # Browser-native architecture
 
 Next.js App Router, TypeScript and Tailwind render an English homepage, kanban and
-browser planning chat. Local JSON holds two protected domains and generated output.
+a persistent planning side panel. The calendar is the default workspace; Tasks
+retains the execution board. Local JSON holds two protected domains and generated output.
 No database, website login, API key or hosted model gateway is required.
 
 Browser message → guarded local API → validated source/progress/history/notes snapshot
@@ -38,3 +39,20 @@ The focus timer persists in localStorage and dashboard data polls every 3 second
 
 Official protocol and account behavior:
 [Codex app-server](https://learn.chatgpt.com/docs/app-server).
+
+## Calendar view
+
+The read-only /api/calendar endpoint loads exactly one Monday–Sunday week, including
+all seven confirmed plans. Calendar dates use calendar-day arithmetic across DST.
+Fixed source events are deduplicated from plan blocks and shown without a saved
+plan. An interval layout assigns overlapping commitments separate lanes. Current
+task progress uses the same manual/completion precedence as the task board.
+
+The assistant emits the existing server-validated draft to the selected-day calendar
+as dashed unsaved blocks. This replaces that day's old task schedule only in preview,
+leaving source commitments unchanged. Refusal removes the preview; confirmation
+refreshes week data immediately. Normal polls retain marked last-good data on errors.
+
+Desktop has independent calendar and conversation scrolling. Phones default to Day,
+with the assistant stacked below and reachable from Plan with Codex. Source times
+outside 09–18 stay visible; task hours remain governed by the original validator.

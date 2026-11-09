@@ -2,13 +2,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Activity,
-  ArrowRight,
   BookOpen,
   BriefcaseBusiness,
   CalendarDays,
   Check,
   CheckCircle2,
-  ChevronDown,
   ChevronRight,
   Clock3,
   Columns3,
@@ -22,7 +20,6 @@ import {
   ShieldCheck,
   Sparkles,
   Target,
-  Terminal,
   Timer,
   TriangleAlert,
   X,
@@ -160,7 +157,7 @@ export default function Dashboard() {
       className={`app-shell calendar-layout ${workspaceView === 'calendar' ? 'calendar-mode' : ''} ${assistantOpen ? 'with-assistant' : ''}`}
     >
       <a href="#main" className="skip-link">
-        Skip to task board
+        Skip to workspace
       </a>
       <aside className="icon-rail">
         <a href="/" className="app-logo" aria-label="LifeHarness home">
@@ -168,7 +165,12 @@ export default function Dashboard() {
         </a>
         <nav aria-label="Workspace">
           <button
-            className={domain === 'all' ? 'rail-button active' : 'rail-button'}
+            className={
+              workspaceView === 'tasks' && domain === 'all'
+                ? 'rail-button active'
+                : 'rail-button'
+            }
+            aria-pressed={workspaceView === 'tasks' && domain === 'all'}
             aria-label="All tasks board"
             onClick={() => {
               setWorkspaceView('tasks');
@@ -178,7 +180,12 @@ export default function Dashboard() {
             <Columns3 size={25} />
           </button>
           <button
-            className="rail-button"
+            className={
+              workspaceView === 'calendar'
+                ? 'rail-button active'
+                : 'rail-button'
+            }
+            aria-pressed={workspaceView === 'calendar'}
             aria-label="Open schedule"
             onClick={() => setWorkspaceView('calendar')}
           >
@@ -186,16 +193,21 @@ export default function Dashboard() {
           </button>
           <button
             className={
-              domain === 'academic' ? 'rail-button active' : 'rail-button'
+              workspaceView === 'tasks' && domain === 'academic'
+                ? 'rail-button active'
+                : 'rail-button'
             }
             aria-label="Coursework board"
-            onClick={() => setDomain('academic')}
+            onClick={() => {
+              setWorkspaceView('tasks');
+              setDomain('academic');
+            }}
           >
             <GraduationCap size={26} />
           </button>
           <button
             className={
-              domain === 'career' ? 'rail-button active' : 'rail-button'
+              panel === 'career' ? 'rail-button active' : 'rail-button'
             }
             aria-label="Open job tracker"
             onClick={() => {
@@ -459,7 +471,10 @@ export default function Dashboard() {
                   </button>
                   <button
                     className={domain === 'academic' ? 'selected' : ''}
-                    onClick={() => setDomain('academic')}
+                    onClick={() => {
+                      setWorkspaceView('tasks');
+                      setDomain('academic');
+                    }}
                   >
                     Coursework{' '}
                     <span>
