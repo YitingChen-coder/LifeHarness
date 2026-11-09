@@ -9,9 +9,12 @@ const updateSchema = z
   .strict();
 export async function POST(request: Request) {
   const url = new URL(request.url);
+  const publicUrl = new URL(
+    `${url.protocol}//${request.headers.get('host') ?? url.host}`,
+  );
   if (
-    !['localhost', '127.0.0.1', '[::1]'].includes(url.hostname) ||
-    request.headers.get('origin') !== url.origin
+    !['localhost', '127.0.0.1', '[::1]'].includes(publicUrl.hostname) ||
+    request.headers.get('origin') !== publicUrl.origin
   )
     return Response.json(
       { error: 'Task changes must come from this local workspace.' },

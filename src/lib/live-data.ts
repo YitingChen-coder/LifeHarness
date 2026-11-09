@@ -19,7 +19,20 @@ export function mergeLastGood(
     !next.jobs;
   return {
     ...next,
-    taskState: next.taskState ?? previous.taskState,
+    completedHistory:
+      next.warnings.some(
+        (w) =>
+          w.includes('completion history') ||
+          w.startsWith('Completion history'),
+      ) ||
+      !next.academic ||
+      !next.jobs
+        ? { ...previous.completedHistory, ...next.completedHistory }
+        : next.completedHistory,
+    taskState:
+      Date.parse(previous.fetchedAt) > Date.parse(next.fetchedAt)
+        ? previous.taskState
+        : (next.taskState ?? previous.taskState),
     academic: next.academic ?? previous.academic,
     jobs: next.jobs ?? previous.jobs,
     plan: next.plan ?? (keepPlan ? previous.plan : null),

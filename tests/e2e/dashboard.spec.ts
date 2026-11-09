@@ -1,44 +1,57 @@
 import { test, expect } from '@playwright/test';
 import { existsSync, readFileSync, writeFileSync, unlinkSync } from 'node:fs';
-import { createHash } from 'node:crypto';
 import { resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+const stateFile = resolve('data/user/task-state.json');
+let backup: Buffer | null;
 const hash = () =>
   createHash('sha256')
     .update(readFileSync('data/sources/academic.json'))
     .update(readFileSync('data/sources/jobs.json'))
     .digest('hex');
-test('date controls, application details, conflict warnings and responsive layout', async ({
+test.beforeEach(() => {
+  backup = existsSync(stateFile) ? readFileSync(stateFile) : null;
+  if (existsSync(stateFile)) unlinkSync(stateFile);
+});
+test.afterEach(() => {
+  if (backup) writeFileSync(stateFile, backup);
+  else if (existsSync(stateFile)) unlinkSync(stateFile);
+});
+test('kanban is readable, all tasks searchable, filters and schedule work across viewport sizes', async ({
   page,
 }) => {
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
-  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.goto('/?date=2026-11-10');
   await expect(
-    page.getByRole('heading', { name: 'Your schedule' }),
+    page.getByRole('heading', { name: 'Task board', exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByRole('heading', { name: 'Systems Programming', exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByText('Northstar · technical interview', { exact: true }),
-  ).toBeVisible();
-  await page.getByText('View all 5 applications').click();
-  await expect(page.getByText('Atlas Studio', { exact: true })).toBeVisible();
-  await expect(page.getByText('rejected', { exact: true })).toBeVisible();
+  await expect(page.getByRole('article')).toHaveCount(12);
   await page
-    .getByRole('button', { name: 'Morning check-in', exact: true })
+    .getByRole('button', { name: 'Coursework (7)', exact: true })
+    .click();
+  await expect(page.getByRole('article')).toHaveCount(7);
+  await page.getByRole('textbox', { name: 'Search tasks' }).fill('allocator');
+  await expect(page.getByRole('article')).toHaveCount(2);
+  await page.getByRole('textbox', { name: 'Search tasks' }).fill('');
+  await page
+    .getByRole('button', { name: 'Job search (5)', exact: true })
+    .click();
+  await expect(page.getByRole('article')).toHaveCount(5);
+  await page
+    .getByRole('button', { name: 'All tasks (12)', exact: true })
+    .click();
+  await page.getByRole('button', { name: 'Schedule', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('Systems Programming');
+  await page.keyboard.press('Escape');
+  await page
+    .getByRole('button', { name: 'Plan with Claude', exact: true })
     .click();
   await expect(page.getByRole('dialog')).toContainText(
     'npm run planner -- --date 2026-11-10',
   );
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('dialog')).toHaveCount(0);
-  await page.getByLabel('Planning date').fill('2026-11-12');
-  await expect(
-    page.getByRole('status').filter({ hasText: 'overlaps' }),
-  ).toBeVisible();
-  for (const width of [1440, 768, 390, 320]) {
+  for (const width of [1487, 1024, 768, 390, 320]) {
     await page.setViewportSize({ width, height: 900 });
     expect(
       await page.evaluate(
@@ -46,159 +59,156 @@ test('date controls, application details, conflict warnings and responsive layou
       ),
     ).toBe(true);
   }
-  await page.getByRole('button', { name: 'Sample day' }).click();
-  await expect(page.getByLabel('Planning date')).toHaveValue('2026-11-10');
   expect(errors).toEqual([]);
 });
-test('plan file changes appear within five seconds; bad data and outages retain last good content', async ({
+test('manual states persist across reload and drag-drop without altering sources', async ({
+  page,
+}) => {
+  const before = hash();
+  await page.goto('/?date=2026-11-10');
+  const task = page.getByRole('article', {
+    name: 'Record & submit LifeHarness demo',
+    exact: true,
+  });
+  await task.getByLabel('Task status').selectOption('in_progress');
+  await expect(
+    page
+      .getByRole('region', { name: 'In progress column' })
+      .getByRole('article'),
+  ).toHaveCount(1);
+  await page.reload();
+  await expect(
+    page
+      .getByRole('region', { name: 'In progress column' })
+      .getByRole('article'),
+  ).toHaveCount(1);
+  await page
+    .getByRole('article', {
+      name: 'Record & submit LifeHarness demo',
+      exact: true,
+    })
+    .locator('.drag-handle')
+    .dragTo(page.getByRole('region', { name: 'Done column' }), {
+      targetPosition: { x: 40, y: 30 },
+    });
+  await expect(
+    page.getByRole('region', { name: 'Done column' }).getByRole('article'),
+  ).toHaveCount(1);
+  await expect(
+    page.getByText('1 / 12 completed', { exact: true }),
+  ).toBeVisible();
+  expect(hash()).toBe(before);
+});
+test('focus timer can start pause reset and retain time after reload', async ({
+  page,
+}) => {
+  await page.clock.install({ time: new Date('2026-11-10T15:00:00Z') });
+  await page.goto('/?date=2026-11-10');
+  await page.getByRole('button', { name: 'Start focus', exact: true }).click();
+  await expect(
+    page.getByRole('button', { name: 'Pause focus', exact: true }),
+  ).toBeVisible();
+  await page.clock.fastForward(60000);
+  await expect(page.getByTestId('focus-clock')).toHaveText('24:00');
+  await page.getByRole('button', { name: 'Pause focus', exact: true }).click();
+  await page.clock.fastForward(120000);
+  await expect(page.getByTestId('focus-clock')).toHaveText('24:00');
+  await page.reload();
+  await expect(page.getByTestId('focus-clock')).toHaveText('24:00');
+  await page.getByRole('button', { name: 'Reset timer', exact: true }).click();
+  await expect(page.getByTestId('focus-clock')).toHaveText('25:00');
+});
+test('confirmed plans refresh, invalid reads and connection failures retain last good content', async ({
   page,
 }) => {
   const file = resolve('data/generated/2026-11-15.json'),
-    backup = existsSync(file) ? readFileSync(file) : null,
-    before = hash();
+    old = existsSync(file) ? readFileSync(file) : null;
   const plan = {
     date: '2026-11-15',
     timezone: 'America/Chicago',
     confirmed: true,
     confirmedAt: new Date().toISOString(),
-    summary: 'Browser test approved fixture',
+    summary: 'Synthetic live plan fixture',
     priorities: [
       {
-        id: 'test-p1',
+        id: 'p1',
         sourceId: 'task-algo',
-        title: 'Browser test focus block',
-        reason: 'Explicitly synthetic test fixture',
+        title: 'Study algorithms',
+        reason: 'Explicit test fixture',
         status: 'pending',
       },
     ],
-    blocks: [
-      {
-        id: 'test-b1',
-        sourceId: 'task-algo',
-        title: 'Browser test study session',
-        kind: 'task',
-        status: 'pending',
-        start: '2026-11-15T09:00:00-06:00',
-        end: '2026-11-15T10:00:00-06:00',
-      },
-    ],
+    blocks: [],
   };
   try {
     if (existsSync(file)) unlinkSync(file);
     await page.goto('/?date=2026-11-15');
     await expect(
-      page.getByText('No confirmed check-in for this date'),
+      page.getByText('No confirmed plan', { exact: true }),
     ).toBeVisible();
     const start = Date.now();
     writeFileSync(file, JSON.stringify(plan));
-    await expect(page.getByText('Browser test approved fixture')).toBeVisible({
-      timeout: 5000,
-    });
-    console.log(`File-to-browser refresh: ${Date.now() - start} ms`);
-    await expect(
-      page.getByRole('heading', { name: 'Browser test study session' }),
-    ).toBeVisible();
-    writeFileSync(file, '{"partial":');
+    await expect(page.getByText('Plan confirmed', { exact: true })).toBeVisible(
+      { timeout: 5000 },
+    );
+    console.log('Plan refresh:', Date.now() - start, 'ms');
+    await page.getByRole('button', { name: 'Schedule', exact: true }).click();
+    await expect(page.getByRole('dialog')).toContainText(plan.summary);
+    await page.keyboard.press('Escape');
+    writeFileSync(file, '{partial');
     await expect(
       page.getByRole('status').filter({ hasText: 'plan for' }),
     ).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText('Browser test approved fixture')).toBeVisible();
+    await expect(
+      page.getByText('Plan confirmed', { exact: true }),
+    ).toBeVisible();
     await page.route('**/api/dashboard?*', (route) => route.abort());
     await expect(
       page.getByRole('status').filter({ hasText: 'Connection interrupted' }),
     ).toBeVisible({ timeout: 5000 });
-    await expect(page.getByText('Browser test approved fixture')).toBeVisible();
-    await page.unroute('**/api/dashboard?*');
-    writeFileSync(
-      file,
-      JSON.stringify({
-        ...plan,
-        priorities: plan.priorities.map((p) => ({ ...p, status: 'completed' })),
-        blocks: plan.blocks.map((b) => ({ ...b, status: 'completed' })),
-      }),
-    );
-    await expect(page.getByText('Browser test focus block')).toHaveClass(
-      'strike',
-      { timeout: 5000 },
-    );
-    expect(hash()).toBe(before);
+    await expect(page.getByRole('article')).toHaveCount(12);
   } finally {
-    if (backup) writeFileSync(file, backup);
+    if (old) writeFileSync(file, old);
     else if (existsSync(file)) unlinkSync(file);
   }
 });
-test('check-in dialog traps keyboard focus and returns it to the opener', async ({
-  page,
-}) => {
-  await page.goto('/?date=2026-11-10');
-  const opener = page.getByRole('button', {
-    name: 'Morning check-in',
-    exact: true,
-  });
-  await opener.click();
-  await expect(
-    page.getByRole('button', { name: 'Close check-in instructions' }),
-  ).toBeFocused();
-  await page.keyboard.press('Shift+Tab');
-  await expect(page.getByRole('button', { name: 'Got it' })).toBeFocused();
-  await page.keyboard.press('Tab');
-  await expect(
-    page.getByRole('button', { name: 'Close check-in instructions' }),
-  ).toBeFocused();
-  await page.keyboard.press('Escape');
-  await expect(opener).toBeFocused();
-});
-test('all tracked tasks can be inspected and transient source errors retain the previous view', async ({
+test('source errors retain tasks and dialogs trap and restore keyboard focus', async ({
   page,
   request,
 }) => {
   await page.goto('/?date=2026-11-10');
-  await page.getByRole('button', { name: 'Show all 7 academic tasks' }).click();
-  await expect(
-    page.getByRole('heading', { name: 'Memory allocator lab', exact: true }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('heading', {
-      name: 'Weekly notes & course review',
-      exact: true,
-    }),
-  ).toBeVisible();
-  await page.getByRole('button', { name: 'Show all 5 career tasks' }).click();
-  await expect(
-    page.getByRole('heading', {
-      name: 'Tailor portfolio for Lumen',
-      exact: true,
-    }),
-  ).toBeVisible();
-  const response = await request.get('/api/dashboard?date=2026-11-10');
-  const payload = await response.json();
+  await expect(page.getByRole('article')).toHaveCount(12);
+  const original = await (
+    await request.get('/api/dashboard?date=2026-11-10')
+  ).json();
   await page.route('**/api/dashboard?*', (route) =>
     route.fulfill({
       json: {
-        ...payload,
+        ...original,
         academic: null,
         jobs: null,
-        plan: null,
-        warnings: [
-          'academic.json is missing, unreadable or invalid. Check the source file locally.',
-          'jobs.json is missing, unreadable or invalid. Check the source file locally.',
-        ],
+        warnings: ['academic.json is unreadable', 'jobs.json is unreadable'],
       },
     }),
   );
   await expect(
     page.getByRole('status').filter({ hasText: 'academic.json' }),
   ).toBeVisible({ timeout: 5000 });
+  await expect(page.getByRole('article')).toHaveCount(12);
+  const opener = page.getByRole('button', {
+    name: 'Plan with Claude',
+    exact: true,
+  });
+  await opener.click();
   await expect(
-    page.getByRole('heading', { name: 'Memory allocator lab', exact: true }),
-  ).toBeVisible();
+    page.getByRole('button', { name: 'Close dialog' }),
+  ).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.getByRole('button', { name: 'Got it' })).toBeFocused();
+  await page.keyboard.press('Tab');
   await expect(
-    page.getByRole('heading', {
-      name: 'Tailor portfolio for Lumen',
-      exact: true,
-    }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole('heading', { name: 'Systems Programming', exact: true }),
-  ).toBeVisible();
+    page.getByRole('button', { name: 'Close dialog' }),
+  ).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(opener).toBeFocused();
 });

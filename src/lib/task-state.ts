@@ -31,9 +31,9 @@ export type TaskState = z.infer<typeof taskStateSchema>;
 const empty = (): TaskState => ({ version: 1, tasks: {} });
 async function safeStatePath(root: string) {
   const canonical = await realpath(root);
-  for (const path of ['data', 'data/user', 'data/user/task-state.json']) {
+  for (const path of ['', 'user', 'user/task-state.json']) {
     try {
-      const stat = await lstat(join(canonical, path));
+      const stat = await lstat(join(canonical, 'data', path));
       if (stat.isSymbolicLink() || (stat.isFile() && stat.nlink > 1))
         throw new Error('Unsafe task-state path');
       if (path.endsWith('.json') && (!stat.isFile() || stat.size > 131072))

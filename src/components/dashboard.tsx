@@ -1,797 +1,777 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Activity,
-  ArrowDownRight,
   ArrowRight,
   BookOpen,
   BriefcaseBusiness,
   CalendarDays,
   Check,
   CheckCircle2,
+  ChevronDown,
   ChevronRight,
-  Circle,
+  Clipboard,
   Clock3,
-  Code2,
+  Columns3,
   GraduationCap,
-  LayoutDashboard,
-  Leaf,
-  LockKeyhole,
-  MapPin,
+  ListTodo,
+  Loader2,
+  Pause,
+  Play,
+  RotateCcw,
+  Search,
+  ShieldCheck,
   Sparkles,
-  Sun,
+  Target,
   Terminal,
+  Timer,
   TriangleAlert,
-  X,
 } from 'lucide-react';
 import { chicagoDate, dateLabel, timeLabel, validDate } from '@/lib/dates';
+import { boardTasks, filterTasks, type BoardTask } from '@/lib/board';
+import type { TaskState, TaskStatus } from '@/lib/task-state';
 import { dailyView } from '@/lib/view';
+import { newFocus, startFocus, pauseFocus, focusLabel } from '@/lib/focus';
 import { useDashboard } from './use-dashboard';
-import type { Plan } from '@/lib/schema';
+import { useFocus } from './use-focus';
+import { Overlay } from './overlay';
+import { TaskCard } from './task-card';
 const DEMO_DATE = '2026-11-10';
-function Due({ date, selected }: { date: string; selected: string }) {
-  const due = chicagoDate(new Date(date));
-  const label =
-    due === selected
-      ? 'Due today'
-      : due < selected
-        ? 'Overdue'
-        : new Intl.DateTimeFormat('en-US', {
-            timeZone: 'America/Chicago',
-            month: 'short',
-            day: 'numeric',
-          }).format(new Date(date));
-  return (
-    <span className={`due ${due <= selected ? 'urgent' : ''}`}>{label}</span>
-  );
-}
+const columns = [
+  { status: 'todo', label: 'To do', icon: ListTodo },
+  { status: 'in_progress', label: 'In progress', icon: Play },
+  { status: 'done', label: 'Done', icon: CheckCircle2 },
+] as const;
 export default function Dashboard() {
   const [date, setDate] = useState(chicagoDate());
-  const [help, setHelp] = useState(false);
-  const [allAcademic, setAllAcademic] = useState(false);
-  const [allCareer, setAllCareer] = useState(false);
-  const dialogRef = useRef<HTMLDialogElement>(null);
-  const helpOpener = useRef<HTMLElement | null>(null);
-  function openHelp() {
-    helpOpener.current = document.activeElement as HTMLElement;
-    setHelp(true);
-  }
-  const { data, error, loading } = useDashboard(date);
+  const [domain, setDomain] = useState<'all' | 'academic' | 'career'>('all');
+  const [query, setQuery] = useState('');
+  const [due, setDue] = useState<'all' | 'today' | 'urgent'>('all');
+  const [panel, setPanel] = useState<'schedule' | 'claude' | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [notice, setNotice] = useState('');
+  const [dragId, setDragId] = useState<string | null>(null);
+  const [dropStatus, setDropStatus] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+  const { data, error, loading, applyTaskState } = useDashboard(date);
+  const timer = useFocus();
   useEffect(() => {
-    const param = new URLSearchParams(window.location.search).get('date');
-    if (param && validDate(param)) setDate(param);
+    const value = new URLSearchParams(window.location.search).get('date');
+    if (value && validDate(value)) setDate(value);
   }, []);
-  useEffect(() => {
-    if (!help) return;
-    dialogRef.current?.showModal();
-    return () => helpOpener.current?.focus();
-  }, [help]);
+  const tasks = useMemo(() => (data ? boardTasks(data) : []), [data]);
   const view = data ? dailyView(data) : null;
-  const plan = data?.plan;
-  const nextInterview = data?.jobs?.interviews
-    .filter((e) => chicagoDate(new Date(e.start)) >= date)
-    .sort((a, b) => Date.parse(a.start) - Date.parse(b.start))[0];
-  const demo = date === DEMO_DATE && date !== chicagoDate();
-  function selectDate(next: string) {
-    if (!validDate(next)) return;
-    setDate(next);
+  const visible = filterTasks(tasks, { query, domain, due, date });
+  const completed = tasks.filter((t) => t.status === 'done').length;
+  const focusTask =
+    tasks.find((t) => t.id === timer.state.taskId && t.status !== 'done') ??
+    tasks.find((t) => t.status === 'in_progress') ??
+    tasks.find((t) => t.status === 'todo' && t.priority) ??
+    tasks.find((t) => t.status === 'todo');
+  const currentDetail = tasks.find((t) => t.id === detailId);
+  const timerMatches = focusTask?.id === timer.state.taskId;
+  const remaining = timerMatches ? timer.remaining : 1500000;
+  const running = timerMatches && timer.state.endsAt !== null && remaining > 0;
+  const clock = focusLabel(remaining);
+  const demo = date !== chicagoDate();
+  const command =
+    date === chicagoDate()
+      ? 'npm run planner'
+      : `npm run planner -- --date ${date}`;
+  function changeDate(value: string) {
+    if (!validDate(value)) return;
+    setDate(value);
     const url = new URL(window.location.href);
-    if (next === chicagoDate()) url.searchParams.delete('date');
-    else url.searchParams.set('date', next);
+    if (value === chicagoDate()) url.searchParams.delete('date');
+    else url.searchParams.set('date', value);
     window.history.replaceState({}, '', url);
   }
-  const timeline: Plan['blocks'] = plan?.blocks.length
-    ? [...plan.blocks].sort((a, b) => Date.parse(a.start) - Date.parse(b.start))
-    : (view?.events ?? []).map((e) => ({
-        id: e.id,
-        sourceId: e.id,
-        title: e.title,
-        start: e.start,
-        end: e.end,
-        kind: e.kind,
-        status: 'pending',
-      }));
+  async function move(id: string, status: TaskStatus) {
+    if (saving) return false;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const response = await fetch('/api/tasks', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id, status }),
+      });
+      const body = await response.json();
+      if (!response.ok)
+        throw new Error(body.error ?? 'Progress could not be saved.');
+      applyTaskState(body as TaskState);
+      setNotice(
+        `${tasks.find((t) => t.id === id)?.title ?? 'Task'} moved to ${columns.find((c) => c.status === status)?.label}.`,
+      );
+      if (status === 'done' && timer.state.taskId === id)
+        timer.update(newFocus());
+      return true;
+    } catch (e) {
+      setSaveError(
+        e instanceof Error ? e.message : 'Could not save task progress.',
+      );
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }
+  async function beginFocus(id: string) {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    if (task.status === 'todo' && !(await move(id, 'in_progress'))) return;
+    const state = timer.state.taskId === id ? timer.state : newFocus(id);
+    timer.update(startFocus(state, Date.now()));
+  }
+  function toggleTimer() {
+    if (!focusTask) return;
+    if (running) timer.update(pauseFocus(timer.state, Date.now()));
+    else void beginFocus(focusTask.id);
+  }
+  const fixed = [
+    ...(data?.academic?.events ?? []),
+    ...(data?.jobs?.interviews ?? []),
+  ]
+    .filter((e) => chicagoDate(new Date(e.start)) >= date)
+    .sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+  const nextEvent = fixed[0];
+  async function copyCommand() {
+    try {
+      await navigator.clipboard.writeText(command);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+      setNotice('Select the command below and copy it into your terminal.');
+    }
+  }
   return (
-    <div className="workspace">
-      <a className="skip-link" href="#main">
-        Skip to your day
+    <div className="app-shell">
+      <a href="#main" className="skip-link">
+        Skip to task board
       </a>
-      <aside className="sidebar">
-        <a href="#main" className="brand">
-          <span className="brand-icon">
-            <Activity size={23} />
-          </span>
-          LifeHarness<span className="brand-dot">.</span>
+      <aside className="icon-rail">
+        <a href="#main" className="app-logo" aria-label="LifeHarness home">
+          <Activity size={30} />
         </a>
-        <div className="workspace-label">PERSONAL WORKSPACE</div>
-        <nav aria-label="Main navigation">
-          <a className="nav-item active" href="#main">
-            <LayoutDashboard size={18} />
-            Overview
-            <span className="nav-dot" />
-          </a>
-          <a className="nav-item" href="#schedule">
-            <CalendarDays size={18} />
-            My schedule
-          </a>
-          <a className="nav-item" href="#academics">
-            <GraduationCap size={19} />
-            Academics
-          </a>
-          <a className="nav-item" href="#career">
-            <BriefcaseBusiness size={18} />
-            Career
-          </a>
+        <nav aria-label="Workspace">
+          <button
+            className={domain === 'all' ? 'rail-button active' : 'rail-button'}
+            aria-label="All tasks board"
+            onClick={() => setDomain('all')}
+          >
+            <Columns3 size={25} />
+          </button>
+          <button
+            className="rail-button"
+            aria-label="Open schedule"
+            onClick={() => setPanel('schedule')}
+          >
+            <CalendarDays size={25} />
+          </button>
+          <button
+            className={
+              domain === 'academic' ? 'rail-button active' : 'rail-button'
+            }
+            aria-label="Coursework board"
+            onClick={() => setDomain('academic')}
+          >
+            <GraduationCap size={26} />
+          </button>
+          <button
+            className={
+              domain === 'career' ? 'rail-button active' : 'rail-button'
+            }
+            aria-label="Job search board"
+            onClick={() => setDomain('career')}
+          >
+            <BriefcaseBusiness size={25} />
+          </button>
         </nav>
-        <div className="sidebar-note">
-          <div className="little-icon">
-            <Leaf size={18} />
-          </div>
-          <h3>A plan, not more pressure.</h3>
-          <p>Make space for focused work. And for everything else.</p>
-          <span className="local-tag">
-            <span />
-            Local-first, always
-          </span>
-        </div>
-        <div className="sidebar-bottom">
-          <div className="avatar">M</div>
-          <div>
-            <strong>MPCS student</strong>
-            <span>Your personal workspace</span>
-          </div>
-          <LockKeyhole size={15} />
-        </div>
+        <button
+          className="rail-button rail-bottom"
+          aria-label="Claude check-in instructions"
+          onClick={() => setPanel('claude')}
+        >
+          <Terminal size={23} />
+        </button>
       </aside>
-      <div className="app-body">
-        <header className="topbar">
-          <div className="breadcrumb">
-            Workspace
-            <ChevronRight size={14} />
-            <strong>Overview</strong>
-          </div>
-          <div className="topbar-right">
-            <span className="connection">
-              <span />
-              Runs on your computer
-            </span>
-            <button
-              className="icon-button"
-              aria-label="How to check in"
-              onClick={openHelp}
-            >
-              <Terminal size={19} />
-            </button>
-            <div className="avatar small">M</div>
-          </div>
+      <div className="board-workspace">
+        <header className="workspace-header">
+          <a className="wordmark" href="#main">
+            LifeHarness<span>.</span>
+          </a>
+          <span className="header-separator" />
+          <span className="current-date">
+            <CalendarDays size={20} />
+            {new Intl.DateTimeFormat('en-US', {
+              timeZone: 'America/Chicago',
+              month: 'short',
+              day: 'numeric',
+              year: 'numeric',
+            }).format(new Date())}
+            <span>America/Chicago</span>
+          </span>
+          <button
+            className="schedule-button"
+            onClick={() => setPanel('schedule')}
+          >
+            <CalendarDays size={19} />
+            Schedule
+            <ChevronDown size={16} />
+          </button>
         </header>
-        <main id="main" className="main-content">
-          <div className="page-heading">
+        <main id="main" className="board-main">
+          <section className="board-heading">
             <div>
-              <p className="eyebrow">
-                <Sun size={15} />
-                {dateLabel(date)}
-              </p>
-              <h1>
-                Your day, in focus<span>.</span>
-              </h1>
-              <p className="subtitle">
-                A little structure for the things that matter.
-              </p>
+              <p className="section-kicker">FOCUS LANE</p>
+              <div className="title-row">
+                <h1>Task board</h1>
+                <label className="board-date">
+                  <CalendarDays size={22} />
+                  <input
+                    aria-label="Planning date"
+                    type="date"
+                    value={date}
+                    onChange={(e) => changeDate(e.target.value)}
+                  />
+                </label>
+                {demo && <span className="demo-label">Demo</span>}
+              </div>
+              <div className="heading-subline">
+                <strong>One task at a time.</strong>
+                <span>
+                  {completed} / {tasks.length} completed
+                </span>
+              </div>
             </div>
-            <button className="primary-button" onClick={openHelp}>
-              <Sparkles size={16} />
-              Morning check-in
-              <ArrowRight size={16} />
+            <button
+              className="primary-btn plan-button"
+              onClick={() => {
+                setCopied(false);
+                setPanel('claude');
+              }}
+            >
+              <Sparkles size={21} />
+              Plan with Claude
             </button>
-          </div>
-          <div className="date-toolbar">
-            <div className="segmented">
+          </section>
+          <div className="board-meta-line">
+            <div className="date-shortcuts">
               <button
-                aria-pressed={date === chicagoDate()}
-                className={date === chicagoDate() ? 'selected' : ''}
-                onClick={() => selectDate(chicagoDate())}
+                onClick={() => changeDate(chicagoDate())}
+                aria-pressed={!demo}
               >
                 Today
               </button>
               <button
-                aria-pressed={demo}
-                className={demo ? 'selected' : ''}
-                onClick={() => selectDate(DEMO_DATE)}
+                onClick={() => changeDate(DEMO_DATE)}
+                aria-pressed={date === DEMO_DATE}
               >
-                Sample day<span className="tiny-badge">DEMO</span>
+                Sample day
               </button>
             </div>
-            <label className="date-picker">
-              <CalendarDays size={15} />
-              <input
-                type="date"
-                aria-label="Planning date"
-                value={date}
-                onChange={(e) => selectDate(e.target.value)}
-              />
-            </label>
-            <span className="timezone">America/Chicago</span>
-            <span className="live-indicator">
-              <span className={error ? 'amber-dot' : ''} />
-              {error ? 'Reconnecting' : 'Live view'}
+            <span className={`plan-state ${data?.plan ? 'confirmed' : ''}`}>
+              {data?.plan ? (
+                <>
+                  <CheckCircle2 size={14} />
+                  <span>Plan confirmed</span>
+                  <span className="checkin-time">
+                    {timeLabel(data.plan.confirmedAt)}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <Clock3 size={14} />
+                  <span>No confirmed plan</span>
+                </>
+              )}
+            </span>
+            <span className="save-state">
+              <ShieldCheck size={14} />
+              {saving ? 'Saving…' : 'Saved locally'}
             </span>
           </div>
-          {demo && (
-            <div className="demo-banner">
-              <BookOpen size={16} />
-              <span>
-                Sample week · November 9–15, 2026. Start Claude with{' '}
-                <code>npm run planner:demo</code> to plan this date.
-              </span>
-            </div>
-          )}
           {error && (
-            <div className="warning" role="status">
-              <TriangleAlert size={17} />
+            <div className="notice warning" role="status">
+              <TriangleAlert size={18} />
               {error}
             </div>
           )}
+          {saveError && (
+            <div className="notice warning" role="alert">
+              <TriangleAlert size={18} />
+              {saveError}
+            </div>
+          )}
           {data?.warnings.map((w) => (
-            <div className="warning" role="status" key={w}>
-              <TriangleAlert size={17} />
+            <div key={w} className="notice warning" role="status">
+              <TriangleAlert size={18} />
               {w}
             </div>
           ))}
+          <div className="sr-only" aria-live="polite">
+            {notice}
+          </div>
+          <section
+            className={`focus-strip ${!focusTask ? 'empty-focus' : ''}`}
+            aria-label="Focus timer"
+          >
+            <div className="focus-copy">
+              <Target size={25} />
+              <span className="focus-label">FOCUS NOW</span>
+              <span className="focus-dash">—</span>
+              <div className="focus-task">
+                <strong>
+                  {focusTask?.title ??
+                    (loading ? 'Loading your tasks…' : 'You’re all caught up.')}
+                </strong>
+                {focusTask && (
+                  <span>
+                    {focusTask.durationMinutes} min <span>·</span>{' '}
+                    {chicagoDate(new Date(focusTask.due)) <= date
+                      ? 'Due ' +
+                        (chicagoDate(new Date(focusTask.due)) === date
+                          ? 'today · ' + timeLabel(focusTask.due)
+                          : 'earlier')
+                      : new Intl.DateTimeFormat('en-US', {
+                          timeZone: 'America/Chicago',
+                          month: 'short',
+                          day: 'numeric',
+                        }).format(new Date(focusTask.due))}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="timer-controls">
+              <div className="timer-display">
+                <Timer size={21} />
+                <span data-testid="focus-clock">{clock}</span>
+              </div>
+              <button
+                className="primary-btn focus-start"
+                disabled={!focusTask || saving}
+                onClick={toggleTimer}
+              >
+                {running ? <Pause size={17} /> : <Play size={17} />}
+                <span>
+                  {running
+                    ? 'Pause focus'
+                    : remaining === 0
+                      ? 'Start focus'
+                      : 'Start focus'}
+                </span>
+              </button>
+              <button
+                className="icon-btn timer-reset"
+                disabled={!focusTask}
+                aria-label="Reset timer"
+                onClick={() => timer.update(newFocus(focusTask?.id ?? null))}
+              >
+                <RotateCcw size={17} />
+              </button>
+            </div>
+          </section>
+          {timerMatches && remaining === 0 && (
+            <p className="timer-message" role="status">
+              Focus session complete. Take a break, then mark the task done when
+              you’re ready.
+            </p>
+          )}
+          {timer.storageError && (
+            <p className="timer-message" role="status">
+              Browser storage is unavailable. Your timer will reset if you
+              reload.
+            </p>
+          )}
+          <section className="board-toolbar" aria-label="Task filters">
+            <label className="task-search">
+              <Search size={21} />
+              <input
+                aria-label="Search tasks"
+                placeholder="Search tasks"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+              {query && (
+                <button aria-label="Clear search" onClick={() => setQuery('')}>
+                  Clear
+                </button>
+              )}
+            </label>
+            <div className="filter-tabs">
+              <button
+                className={domain === 'all' ? 'selected' : ''}
+                onClick={() => setDomain('all')}
+              >
+                All tasks <span>({tasks.length})</span>
+              </button>
+              <button
+                className={domain === 'academic' ? 'selected' : ''}
+                onClick={() => setDomain('academic')}
+              >
+                Coursework{' '}
+                <span>
+                  ({tasks.filter((t) => t.domain === 'academic').length})
+                </span>
+              </button>
+              <button
+                className={domain === 'career' ? 'selected' : ''}
+                onClick={() => setDomain('career')}
+              >
+                Job search{' '}
+                <span>
+                  ({tasks.filter((t) => t.domain === 'career').length})
+                </span>
+              </button>
+            </div>
+            <label className="due-filter">
+              <span className="sr-only">Deadline filter</span>
+              <select
+                aria-label="Deadline filter"
+                value={due}
+                onChange={(e) => setDue(e.target.value as typeof due)}
+              >
+                <option value="all">All deadlines</option>
+                <option value="today">Due today</option>
+                <option value="urgent">Due or overdue</option>
+              </select>
+            </label>
+          </section>
+          {loading && !data ? (
+            <div className="loading-board" role="status">
+              <Loader2 size={25} />
+              <h2>Loading your task board</h2>
+              <p>Bringing coursework and your job search together.</p>
+            </div>
+          ) : !data ? (
+            <div className="loading-board">
+              <h2>Couldn’t load your workspace</h2>
+              <p>Keep the local server running. We’ll retry automatically.</p>
+            </div>
+          ) : (
+            <div className={`kanban-board ${dragId ? 'is-dragging' : ''}`}>
+              {columns.map((column) => {
+                const cards = visible.filter((t) => t.status === column.status);
+                const Icon = column.icon;
+                return (
+                  <section
+                    key={column.status}
+                    role="region"
+                    aria-label={`${column.label} column`}
+                    className={`kanban-column ${column.status} ${dropStatus === column.status ? 'drop-active' : ''}`}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = 'move';
+                      setDropStatus(column.status);
+                    }}
+                    onDragLeave={(e) => {
+                      if (
+                        !(e.relatedTarget instanceof Node) ||
+                        !e.currentTarget.contains(e.relatedTarget)
+                      )
+                        setDropStatus(null);
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const id = e.dataTransfer.getData('text/plain');
+                      setDropStatus(null);
+                      setDragId(null);
+                      if (tasks.some((t) => t.id === id))
+                        void move(id, column.status);
+                    }}
+                  >
+                    <header className="column-heading">
+                      <h2>
+                        <Icon size={23} />
+                        {column.label}
+                      </h2>
+                      <span>
+                        {cards.length} {cards.length === 1 ? 'task' : 'tasks'}
+                      </span>
+                    </header>
+                    <div className="column-tasks">
+                      {cards.map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          date={date}
+                          busy={saving}
+                          move={(id, status) => void move(id, status)}
+                          focus={(id) => void beginFocus(id)}
+                          details={setDetailId}
+                          drag={setDragId}
+                        />
+                      ))}
+                      {!cards.length && (
+                        <div className="empty-column">
+                          {column.status === 'done' ? (
+                            <CheckCircle2 size={29} />
+                          ) : column.status === 'in_progress' ? (
+                            <Play size={29} />
+                          ) : (
+                            <ListTodo size={29} />
+                          )}
+                          <strong>
+                            {query || domain !== 'all' || due !== 'all'
+                              ? 'No matching tasks'
+                              : column.status === 'done'
+                                ? 'Good work goes here.'
+                                : column.status === 'in_progress'
+                                  ? 'Make one thing your focus.'
+                                  : 'Nothing left to start.'}
+                          </strong>
+                          <p>
+                            {query || domain !== 'all' || due !== 'all'
+                              ? 'Try another search or filter.'
+                              : column.status === 'done'
+                                ? 'Mark a task done to see your progress.'
+                                : column.status === 'in_progress'
+                                  ? 'Start a task or drag one here.'
+                                  : 'Enjoy a little breathing room.'}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                );
+              })}
+            </div>
+          )}
+          <button
+            className="next-event-bar"
+            onClick={() => setPanel('schedule')}
+          >
+            <GraduationCap size={24} />
+            <strong>
+              {nextEvent
+                ? nextEvent.kind === 'class'
+                  ? 'Next class:'
+                  : 'Next interview:'
+                : 'Your schedule'}
+            </strong>
+            <span>
+              {nextEvent
+                ? `${nextEvent.title} · ${chicagoDate(new Date(nextEvent.start)) === date ? '' : new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', month: 'short', day: 'numeric' }).format(new Date(nextEvent.start)) + ' · '}${timeLabel(nextEvent.start)}`
+                : 'No upcoming fixed events. View your confirmed plan.'}
+            </span>
+            <ChevronRight size={22} />
+          </button>
+          <footer className="board-footer">
+            <span>Move tasks by dragging or use the status menu.</span>
+            <span>
+              <ShieldCheck size={13} />
+              Your original calendar and tracker stay protected.
+            </span>
+          </footer>
+        </main>
+      </div>
+      {panel === 'claude' && (
+        <Overlay title="Plan with Claude" close={() => setPanel(null)}>
+          <div className="checkin-intro">
+            <span className="modal-symbol">
+              <Sparkles size={27} />
+            </span>
+            <h3>A plan that starts with you.</h3>
+            <p>
+              Claude reads your calendar, tasks and latest progress. Answer a
+              question or two, then confirm your plan.
+            </p>
+          </div>
+          <label className="command-label">
+            Run in your LifeHarness terminal
+          </label>
+          <div className="command-box">
+            <code>{command}</code>
+            <button
+              className="icon-btn"
+              aria-label="Copy command"
+              onClick={() => void copyCommand()}
+            >
+              {copied ? <Check size={18} /> : <Clipboard size={18} />}
+            </button>
+          </div>
+          <p className="copy-feedback" aria-live="polite">
+            {copied
+              ? 'Command copied. Paste it into your terminal.'
+              : 'Then say “Good morning” or “Plan my day”.'}
+          </p>
+          <ol className="checkin-steps">
+            <li>
+              <span>1</span>Start the planner in your terminal.
+            </li>
+            <li>
+              <span>2</span>Review Claude’s priorities and schedule.
+            </li>
+            <li>
+              <span>3</span>Confirm to save. This page updates automatically.
+            </li>
+          </ol>
+          <p className="modal-note">
+            Starting a timer or moving a task doesn’t generate an AI plan.
+          </p>
+          <button
+            className="primary-btn modal-done"
+            onClick={() => setPanel(null)}
+          >
+            Got it
+            <Check size={17} />
+          </button>
+        </Overlay>
+      )}
+      {panel === 'schedule' && (
+        <Overlay drawer title="Your schedule" close={() => setPanel(null)}>
+          <p className="drawer-subtitle">{dateLabel(date)} · America/Chicago</p>
           {view?.conflicts.map((c) => (
-            <div className="warning" role="status" key={c}>
-              <TriangleAlert size={17} />
+            <div className="notice warning" key={c}>
               {c}
             </div>
           ))}
-          {loading && !data ? (
-            <div className="loading-state" role="status">
-              <Activity size={24} />
-              <h2>Bringing your day together…</h2>
-              <p>Reading your local calendar and career tracker.</p>
-            </div>
-          ) : !data ? (
-            <div className="card empty-page">
-              <TriangleAlert />
-              <h2>Your workspace is temporarily unavailable</h2>
+          {data?.plan && (
+            <section className="confirmed-summary">
+              <span className="section-kicker">CONFIRMED WITH CLAUDE</span>
+              <h3>{data.plan.summary}</h3>
               <p>
-                Keep the local server running. This page retries automatically.
+                Last check-in:{' '}
+                {dateLabel(chicagoDate(new Date(data.plan.confirmedAt)))} ·{' '}
+                {timeLabel(data.plan.confirmedAt)}
               </p>
-            </div>
-          ) : (
-            <>
-              <section className="stats-grid" aria-label="Day at a glance">
-                <article className="stat-card">
-                  <div className="stat-icon blue">
-                    <CalendarDays size={19} />
-                  </div>
-                  <span>On the calendar</span>
-                  <div className="stat-value">
-                    {view!.events.length}
-                    <small>fixed events</small>
-                  </div>
-                  <p>Classes & interviews</p>
-                </article>
-                <article className="stat-card">
-                  <div className="stat-icon purple">
-                    <BookOpen size={19} />
-                  </div>
-                  <span>Academic deadlines</span>
-                  <div className="stat-value">
-                    {
-                      view!.academicTasks.filter(
-                        (t) =>
-                          t.status === 'pending' &&
-                          chicagoDate(new Date(t.due)) <= date,
-                      ).length
-                    }
-                    <small>due or overdue</small>
-                  </div>
+              <ul>
+                {data.plan.priorities.map((p) => (
+                  <li key={p.id}>
+                    <Target size={15} />
+                    <span>
+                      <strong>{p.title}</strong>
+                      <small>{p.reason}</small>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+          <h3 className="drawer-section-label">
+            {data?.plan ? 'Confirmed timeline' : 'Fixed events today'}
+          </h3>
+          <div className="schedule-list">
+            {(data?.plan?.blocks.length
+              ? data.plan.blocks
+              : (view?.events ?? [])
+            ).map((event) => (
+              <div key={event.id} className="schedule-row">
+                <div>
+                  <strong>{timeLabel(event.start)}</strong>
+                  <span>{timeLabel(event.end)}</span>
+                </div>
+                <section>
+                  <span className={`event-kind ${event.kind}`}>
+                    {event.kind === 'class'
+                      ? 'Class'
+                      : event.kind === 'interview'
+                        ? 'Interview'
+                        : event.kind === 'break'
+                          ? 'Break'
+                          : 'Focus time'}
+                  </span>
+                  <h4>{event.title}</h4>
                   <p>
-                    {data.academic?.courses.length ?? 0} courses in your
-                    calendar
+                    {Math.round(
+                      (Date.parse(event.end) - Date.parse(event.start)) / 60000,
+                    )}{' '}
+                    minutes
                   </p>
-                </article>
-                <article className="stat-card">
-                  <div className="stat-icon teal">
-                    <BriefcaseBusiness size={19} />
-                  </div>
-                  <span>Career momentum</span>
-                  <div className="stat-value">
-                    {view!.applications.active}
-                    <small>active applications</small>
-                  </div>
-                  <p>
-                    {view!.applications.interviewing} in technical interviews
-                  </p>
-                </article>
-                <article className="stat-card">
-                  <div className="stat-icon green">
-                    <CheckCircle2 size={19} />
-                  </div>
-                  <span>Tasks completed</span>
-                  <div className="stat-value">
-                    {view!.completed}
-                    <small>
-                      of {view!.completed + view!.pending} tracked tasks
-                    </small>
-                  </div>
-                  <div className="progress-track">
-                    <span
-                      style={{
-                        width: `${(view!.completed / Math.max(1, view!.completed + view!.pending)) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </article>
-              </section>
-              <div className="primary-grid">
-                <section id="schedule" className="card schedule-card">
-                  <div className="card-heading">
-                    <div>
-                      <h2>
-                        <CalendarDays size={18} />
-                        Your schedule
-                      </h2>
-                      <p>
-                        {plan
-                          ? 'Your confirmed plan, with room to breathe.'
-                          : 'Fixed events from your calendar.'}
-                      </p>
-                    </div>
-                    <span className="soft-tag">{timeline.length} blocks</span>
-                  </div>
-                  {!plan && (
-                    <div className="schedule-prompt">
-                      <span className="prompt-icon">
-                        <Sparkles size={17} />
-                      </span>
-                      <div>
-                        <strong>Your day starts with a conversation.</strong>
-                        <p>
-                          Check in with Claude to turn your tasks into a plan.
-                        </p>
-                      </div>
-                      <button
-                        aria-label="Open check-in instructions"
-                        onClick={openHelp}
-                      >
-                        <ArrowRight size={18} />
-                      </button>
-                    </div>
-                  )}
-                  <div className="timeline">
-                    {timeline.length ? (
-                      timeline.map((block) => (
-                        <div
-                          key={block.id}
-                          className={`timeline-row ${block.kind} ${block.status === 'completed' ? 'is-complete' : ''}`}
-                        >
-                          <div className="timeline-time">
-                            {timeLabel(block.start)}
-                            <span>{timeLabel(block.end)}</span>
-                          </div>
-                          <div className="timeline-marker">
-                            <span />
-                          </div>
-                          <div className="timeline-event">
-                            <div className="event-top">
-                              <span className={`category ${block.kind}`}>
-                                {block.kind === 'class'
-                                  ? 'CLASS'
-                                  : block.kind === 'interview'
-                                    ? 'INTERVIEW'
-                                    : block.kind === 'break'
-                                      ? 'PERSONAL'
-                                      : 'FOCUS TIME'}
-                              </span>
-                              {block.status === 'completed' && (
-                                <CheckCircle2 size={14} />
-                              )}
-                            </div>
-                            <h3>{block.title}</h3>
-                            <p>
-                              <Clock3 size={12} />
-                              {Math.round(
-                                (Date.parse(block.end) -
-                                  Date.parse(block.start)) /
-                                  60000,
-                              )}{' '}
-                              min
-                              {(block.kind === 'class' ||
-                                block.kind === 'interview') && (
-                                <>
-                                  <span className="event-divider">·</span>
-                                  <MapPin size={12} />
-                                  {block.kind === 'class'
-                                    ? 'On campus'
-                                    : 'Video call'}
-                                </>
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="quiet-empty">
-                        <Sun size={26} />
-                        <h3>A little breathing room.</h3>
-                        <p>
-                          No fixed events on this date. Ask Claude to help shape
-                          your day.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                  <div className="card-footer">
-                    <LockKeyhole size={13} />
-                    {plan
-                      ? 'Confirmed plan · source calendar stays protected'
-                      : 'Your calendar is read-only. You make the changes.'}
-                  </div>
                 </section>
-                <div className="right-column">
-                  <section className="card priority-card">
-                    <div className="card-heading">
-                      <div>
-                        <h2>
-                          <Sparkles size={18} />
-                          Your priorities
-                        </h2>
-                        <p>A clear place to start.</p>
-                      </div>
-                      <span className="ai-tag">CLAUDE</span>
-                    </div>
-                    {plan ? (
-                      <>
-                        <p className="plan-summary">{plan.summary}</p>
-                        <ol className="priorities">
-                          {plan.priorities.map((p, i) => (
-                            <li key={p.id}>
-                              <span
-                                className={`priority-number ${p.status === 'completed' ? 'done' : ''}`}
-                              >
-                                {p.status === 'completed' ? (
-                                  <Check size={14} />
-                                ) : (
-                                  String(i + 1).padStart(2, '0')
-                                )}
-                              </span>
-                              <div>
-                                <h3
-                                  className={
-                                    p.status === 'completed' ? 'strike' : ''
-                                  }
-                                >
-                                  {p.title}
-                                </h3>
-                                <p>{p.reason}</p>
-                              </div>
-                            </li>
-                          ))}
-                        </ol>
-                      </>
-                    ) : (
-                      <div className="priority-empty">
-                        <div className="sparkle-orbit">
-                          <Sparkles size={25} />
-                        </div>
-                        <h3>
-                          Less guessing. <br />
-                          More intention.
-                        </h3>
-                        <p>
-                          Your priorities appear here after you confirm a plan
-                          with Claude.
-                        </p>
-                        <button className="text-button" onClick={openHelp}>
-                          Start your first check-in
-                          <ArrowRight size={14} />
-                        </button>
-                      </div>
-                    )}
-                    <div className="checkin-status">
-                      <span
-                        className={plan ? 'status-dot' : 'status-dot muted'}
-                      />
-                      <span>
-                        {plan
-                          ? `Last check-in · ${new Intl.DateTimeFormat('en-US', { timeZone: 'America/Chicago', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(new Date(plan.confirmedAt))}`
-                          : 'No confirmed check-in for this date'}
-                      </span>
-                    </div>
-                  </section>
-                  <div className="focus-note">
-                    <div>
-                      <Leaf size={18} />
-                      <span>MAKE SPACE</span>
-                    </div>
+              </div>
+            ))}
+            {!(data?.plan?.blocks.length || view?.events.length) && (
+              <p className="drawer-empty">
+                No fixed events today. Ask Claude to build a plan around your
+                tasks.
+              </p>
+            )}
+          </div>
+          <h3 className="drawer-section-label">Coming up</h3>
+          <div className="upcoming-list">
+            {fixed
+              .filter((e) => chicagoDate(new Date(e.start)) > date)
+              .slice(0, 5)
+              .map((e) => (
+                <div key={e.id}>
+                  <CalendarDays size={18} />
+                  <div>
+                    <strong>{e.title}</strong>
                     <p>
-                      A realistic plan leaves room
-                      <br />
-                      for being human.
+                      {dateLabel(chicagoDate(new Date(e.start)))} ·{' '}
+                      {timeLabel(e.start)}
                     </p>
-                    <span>Lunch stays yours. 12–1 PM.</span>
                   </div>
                 </div>
-              </div>
-              <div className="secondary-grid">
-                <section id="academics" className="card">
-                  <div className="card-heading">
-                    <div>
-                      <h2>
-                        <GraduationCap size={20} />
-                        Academic deadlines
-                      </h2>
-                      <p>The next steps in your coursework.</p>
-                    </div>
-                    <span className="soft-tag">
-                      {
-                        view!.academicTasks.filter(
-                          (t) => t.status === 'pending',
-                        ).length
-                      }{' '}
-                      pending
-                    </span>
-                  </div>
-                  <div className="task-list">
-                    {view!.academicTasks
-                      .slice(0, allAcademic ? undefined : 5)
-                      .map((task) => (
-                        <div className="task-row" key={task.id}>
-                          <span
-                            className={`task-status ${task.status === 'completed' ? 'complete' : ''}`}
-                            aria-label={task.status}
-                          >
-                            {task.status === 'completed' ? (
-                              <CheckCircle2 size={17} />
-                            ) : (
-                              <Circle size={17} />
-                            )}
-                          </span>
-                          <div className="task-copy">
-                            <h3
-                              className={
-                                task.status === 'completed' ? 'strike' : ''
-                              }
-                            >
-                              {task.title}
-                            </h3>
-                            <p>
-                              {
-                                data.academic?.courses.find(
-                                  (c) => c.id === task.courseId,
-                                )?.code
-                              }
-                              <span>·</span>
-                              {task.durationMinutes} min
-                            </p>
-                          </div>
-                          <Due date={task.due} selected={date} />
-                        </div>
-                      ))}
-                    {!view!.academicTasks.length && (
-                      <p className="small-empty">
-                        No academic tasks available.
-                      </p>
-                    )}
-                  </div>
-                  <div className="card-footer">
-                    <BookOpen size={13} />
-                    Coursework, study sessions & practice
-                    {view!.academicTasks.length > 5 && (
-                      <button
-                        className="text-button expand-button"
-                        onClick={() => setAllAcademic(!allAcademic)}
-                      >
-                        {allAcademic
-                          ? 'Show fewer'
-                          : `Show all ${view!.academicTasks.length} academic tasks`}
-                      </button>
-                    )}
-                  </div>
-                </section>
-                <section id="career" className="card">
-                  <div className="card-heading">
-                    <div>
-                      <h2>
-                        <Code2 size={19} />
-                        Career & interview prep
-                      </h2>
-                      <p>Small steps toward your next chapter.</p>
-                    </div>
-                    <span className="soft-tag">SWE</span>
-                  </div>
-                  <div className="pipeline">
-                    <div>
-                      <strong>{view!.applications.applied}</strong>
-                      <span>Applied</span>
-                    </div>
-                    <ChevronRight size={14} />
-                    <div>
-                      <strong>{view!.applications.screening}</strong>
-                      <span>Screening</span>
-                    </div>
-                    <ChevronRight size={14} />
-                    <div>
-                      <strong>{view!.applications.interviewing}</strong>
-                      <span>Interviewing</span>
-                    </div>
-                  </div>
-                  {nextInterview && (
-                    <div className="next-interview">
-                      <BriefcaseBusiness size={14} />
-                      <div>
-                        <strong>{nextInterview.title}</strong>
-                        <span>
-                          {dateLabel(
-                            chicagoDate(new Date(nextInterview.start)),
-                          )}{' '}
-                          · {timeLabel(nextInterview.start)}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  <div className="career-tasks">
-                    {view!.careerTasks
-                      .slice(0, allCareer ? undefined : 3)
-                      .map((task) => (
-                        <div className="task-row" key={task.id}>
-                          <span
-                            className={`task-status ${task.status === 'completed' ? 'complete' : ''}`}
-                          >
-                            {task.status === 'completed' ? (
-                              <CheckCircle2 size={17} />
-                            ) : (
-                              <Circle size={17} />
-                            )}
-                          </span>
-                          <div className="task-copy">
-                            <h3
-                              className={
-                                task.status === 'completed' ? 'strike' : ''
-                              }
-                            >
-                              {task.title}
-                            </h3>
-                            <p>
-                              {
-                                data.jobs?.applications.find(
-                                  (a) => a.id === task.applicationId,
-                                )?.company
-                              }
-                              <span>·</span>
-                              {task.durationMinutes} min
-                            </p>
-                          </div>
-                          <Due date={task.due} selected={date} />
-                        </div>
-                      ))}
-                    {!view!.careerTasks.length && (
-                      <p className="small-empty">No career tasks available.</p>
-                    )}
-                  </div>
-                  {view!.careerTasks.length > 3 && (
-                    <button
-                      className="list-expand text-button"
-                      onClick={() => setAllCareer(!allCareer)}
-                    >
-                      {allCareer
-                        ? 'Show fewer'
-                        : `Show all ${view!.careerTasks.length} career tasks`}
-                    </button>
-                  )}
-                  <details className="application-details">
-                    <summary>
-                      View all {view!.applications.total} applications
-                      <ArrowDownRight size={14} />
-                    </summary>
-                    <ul>
-                      {data.jobs?.applications.map((app) => (
-                        <li key={app.id}>
-                          <div>
-                            <strong>{app.company}</strong>
-                            <span>{app.role}</span>
-                          </div>
-                          <span className={`application-status ${app.status}`}>
-                            {app.status}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </details>
-                </section>
-              </div>
-              <footer className="page-footer">
-                <span>
-                  <Leaf size={13} />A calmer day starts here.
-                </span>
-                <span>
-                  <LockKeyhole size={12} />
-                  Private by design<span className="footer-dot">·</span>
-                  Synthetic sample data<span className="footer-dot">·</span>
-                  Updates every 3 seconds
-                </span>
-              </footer>
-            </>
-          )}
-        </main>
-      </div>
-      {help && (
-        <dialog
-          ref={dialogRef}
-          className="modal-overlay"
-          aria-labelledby="checkin-title"
-          onKeyDown={(e) => {
-            if (e.key !== 'Tab') return;
-            const buttons =
-              e.currentTarget.querySelectorAll<HTMLButtonElement>('button');
-            const first = buttons[0],
-              last = buttons[buttons.length - 1];
-            if (e.shiftKey && document.activeElement === first) {
-              e.preventDefault();
-              last?.focus();
-            } else if (!e.shiftKey && document.activeElement === last) {
-              e.preventDefault();
-              first?.focus();
-            }
-          }}
-          onCancel={(e) => {
-            e.preventDefault();
-            setHelp(false);
-          }}
-          onClick={() => setHelp(false)}
-        >
-          <section
-            className="checkin-modal"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              autoFocus
-              className="modal-close icon-button"
-              aria-label="Close check-in instructions"
-              onClick={() => setHelp(false)}
-            >
-              <X size={20} />
-            </button>
-            <span className="modal-icon">
-              <Terminal size={24} />
+              ))}
+            {!fixed.some((e) => chicagoDate(new Date(e.start)) > date) && (
+              <p className="drawer-empty">
+                No upcoming events in your source data.
+              </p>
+            )}
+          </div>
+        </Overlay>
+      )}
+      {currentDetail && (
+        <Overlay title="Task details" close={() => setDetailId(null)}>
+          <div className="task-detail">
+            <span className="detail-domain">
+              {currentDetail.domain === 'academic' ? (
+                <BookOpen size={16} />
+              ) : (
+                <BriefcaseBusiness size={16} />
+              )}{' '}
+              {currentDetail.label}
             </span>
-            <p className="eyebrow">YOUR MORNING RITUAL</p>
-            <h2 id="checkin-title">Start with “Good morning”.</h2>
-            <p>
-              Open a terminal in the LifeHarness folder and start your planner:
-            </p>
-            <pre>
-              <code>
-                {date === chicagoDate()
-                  ? 'npm run planner'
-                  : `npm run planner -- --date ${date}`}
-              </code>
-            </pre>
-            <ol>
-              <li>
-                <span>1</span>Say <strong>“Good morning”</strong> or{' '}
-                <strong>“Plan my day”.</strong>
-              </li>
-              <li>
-                <span>2</span>Answer a question or two. Shape a plan together.
-              </li>
-              <li>
-                <span>3</span>Confirm the plan. Your dashboard updates
-                automatically.
-              </li>
-            </ol>
-            <div className="modal-footnote">
-              <LockKeyhole size={15} />
-              Claude can suggest. Your original data stays protected.
-            </div>
-            <button className="primary-button" onClick={() => setHelp(false)}>
-              Got it
-              <Check size={16} />
-            </button>
-          </section>
-        </dialog>
+            <h3>{currentDetail.title}</h3>
+            <p>{currentDetail.context}</p>
+            <dl>
+              <div>
+                <dt>Deadline</dt>
+                <dd>
+                  {dateLabel(chicagoDate(new Date(currentDetail.due)))} ·{' '}
+                  {timeLabel(currentDetail.due)}
+                </dd>
+              </div>
+              <div>
+                <dt>Estimated effort</dt>
+                <dd>{currentDetail.durationMinutes} minutes</dd>
+              </div>
+            </dl>
+            <label className="detail-status">
+              Task status
+              <select
+                aria-label="Task status"
+                value={currentDetail.status}
+                disabled={saving}
+                onChange={(e) =>
+                  void move(currentDetail.id, e.target.value as TaskStatus)
+                }
+              >
+                {columns.map((c) => (
+                  <option key={c.status} value={c.status}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {currentDetail.status !== 'done' && (
+              <button
+                className="primary-btn modal-done"
+                disabled={saving}
+                onClick={() => {
+                  void beginFocus(currentDetail.id);
+                  setDetailId(null);
+                }}
+              >
+                <Target size={18} />
+                Focus on this task
+              </button>
+            )}
+          </div>
+        </Overlay>
       )}
     </div>
   );

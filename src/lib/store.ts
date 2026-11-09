@@ -1,4 +1,4 @@
-import { lstat, readFile, realpath } from 'node:fs/promises';
+import { lstat, readFile, realpath, readdir } from 'node:fs/promises';
 import { join, relative, isAbsolute } from 'node:path';
 import { z } from 'zod';
 import {
@@ -21,6 +21,7 @@ export type DashboardData = {
   plan: Plan | null;
   warnings: string[];
   taskState?: TaskState;
+  completedHistory?: Record<string, string>;
 };
 async function readJson(root: string, path: string): Promise<unknown> {
   const file = join(root, path),
@@ -87,6 +88,51 @@ export async function loadDashboard(
         `The plan for ${date} is unreadable or invalid. Last confirmed content may still be available locally; ask Claude to repair it after confirmation.`,
       );
   }
+  const completedHistory: Record<string, string> = {};
+  if (academic && jobs) {
+    try {
+      const names = (await readdir(join(root, 'data/generated'))).filter(
+        (name) => /^\d{4}-\d{2}-\d{2}\.json$/.test(name),
+      );
+      let invalidHistory = false;
+      for (let index = 0; index < names.length; index += 20) {
+        await Promise.all(
+          names.slice(index, index + 20).map(async (name) => {
+            try {
+              const saved = planSchema.parse(
+                await readJson(root, `data/generated/${name}`),
+              );
+              if (
+                `${saved.date}.json` !== name ||
+                !validateReferences(saved, academic, jobs)
+              )
+                throw new Error('Invalid saved plan');
+              for (const item of [...saved.priorities, ...saved.blocks])
+                if (item.status === 'completed' && item.sourceId) {
+                  const previous = completedHistory[item.sourceId];
+                  if (
+                    !previous ||
+                    Date.parse(saved.confirmedAt) > Date.parse(previous)
+                  )
+                    completedHistory[item.sourceId] = saved.confirmedAt;
+                }
+            } catch {
+              invalidHistory = true;
+            }
+          }),
+        );
+      }
+      if (invalidHistory)
+        warnings.push(
+          'Some saved plans could not be read for completion history. Showing the last available progress.',
+        );
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT')
+        warnings.push(
+          'Completion history could not be read. Showing the last available progress.',
+        );
+    }
+  }
   let taskState: TaskState | undefined;
   try {
     taskState = await readTaskState(root);
@@ -97,6 +143,7 @@ export async function loadDashboard(
   }
   return {
     taskState,
+    completedHistory,
     date,
     today: chicagoDate(),
     fetchedAt: new Date().toISOString(),

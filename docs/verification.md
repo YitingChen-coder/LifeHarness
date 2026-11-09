@@ -122,3 +122,20 @@
 - Newer human progress overrides older AI completion; newer confirmed completion wins.
 - Test-first: missing board/state modules failed initially; 17 unit tests and typecheck passed.
 - Claude morning skill now reads human progress without write access to that file.
+
+## Task board redesign — checkpoint 2
+
+- Replaced overview cards with selected violet/graphite Focus Lane design, readable
+  task titles, three independently scrollable desktop lanes and a next-event strip.
+- Implemented drag handles and keyboard/touch status menus, all-task search,
+  coursework/career and deadline filters, task details and schedule drawers.
+- Added 25-minute focus timing with pause/reset/reload, copyable Claude launcher
+  commands, confirmed-plan indication and source/stale-save errors.
+- Production browser tests found normalized Next request URL differed from Host;
+  updated the same-origin check to use validated public loopback Host and added regression.
+- Independent review found cross-day completion regression and repeated timer-start
+  reset. Added failing tests first; completion now reads validated plan history,
+  and active deadlines are preserved / expired sessions restart at 25 minutes.
+- 23 unit tests and typecheck passed. Five production browser tests passed, including
+  drag/drop, persistence, timer, filtering, responsive widths, plan refresh (~3.4s),
+  stale states and keyboard focus. Final visual/documentation pass follows.

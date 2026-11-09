@@ -14,11 +14,17 @@ export type BoardTask = {
   priority: boolean;
 };
 export function boardTasks(data: DashboardData): BoardTask[] {
-  const completed = new Set(
-    [...(data.plan?.priorities ?? []), ...(data.plan?.blocks ?? [])]
-      .filter((p) => p.status === 'completed')
-      .map((p) => p.sourceId),
-  );
+  const completed = new Map(Object.entries(data.completedHistory ?? {}));
+  for (const item of [
+    ...(data.plan?.priorities ?? []),
+    ...(data.plan?.blocks ?? []),
+  ]) {
+    if (item.status === 'completed' && item.sourceId) {
+      const prior = completed.get(item.sourceId);
+      if (!prior || Date.parse(data.plan!.confirmedAt) > Date.parse(prior))
+        completed.set(item.sourceId, data.plan!.confirmedAt);
+    }
+  }
   const priorities = new Set(
     (data.plan?.priorities ?? []).map((p) => p.sourceId),
   );
@@ -27,7 +33,7 @@ export function boardTasks(data: DashboardData): BoardTask[] {
     if (
       saved &&
       (!completed.has(id) ||
-        Date.parse(saved.updatedAt) >= Date.parse(data.plan!.confirmedAt))
+        Date.parse(saved.updatedAt) >= Date.parse(completed.get(id)!))
     )
       return saved.status;
     return completed.has(id) || source === 'completed'

@@ -1,7 +1,8 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { DashboardData } from '@/lib/store';
 import { mergeLastGood } from '@/lib/live-data';
+import type { TaskState } from '@/lib/task-state';
 export function useDashboard(date: string) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -49,5 +50,19 @@ export function useDashboard(date: string) {
       controller?.abort();
     };
   }, [date]);
-  return { data: data?.date === date ? data : null, error, loading };
+  const applyTaskState = useCallback(
+    (taskState: TaskState) =>
+      setData((previous) =>
+        previous
+          ? { ...previous, taskState, fetchedAt: new Date().toISOString() }
+          : previous,
+      ),
+    [],
+  );
+  return {
+    applyTaskState,
+    data: data?.date === date ? data : null,
+    error,
+    loading,
+  };
 }
