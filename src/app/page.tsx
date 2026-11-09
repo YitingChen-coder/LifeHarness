@@ -1,1 +1,2 @@
-export default function Home() { return <main className="p-12"><p className="text-sm font-semibold text-blue-600">LIFEHARNESS</p><h1 className="mt-4 text-4xl font-semibold">A little structure. A clearer day.</h1><p className="mt-4 text-slate-600">Your local planning workspace is ready. Data and your morning check-in are next.</p></main>; }
+import Dashboard from '@/components/dashboard';
+export default function Home() { return <Dashboard/>; }

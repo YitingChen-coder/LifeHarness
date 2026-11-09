@@ -55,3 +55,14 @@
   impossible date returned 400; POST returned 405.
 - Client polls every three seconds, aborts stalled reads, retains last good content
   and labels read/connection warnings. Browser behavior will be checked in stage 09.
+
+## Stage 08 — responsive dashboard
+- Eleven tests passed; production build succeeded, including dynamic GET route.
+- Independent headless Chromium rendered the sample day at 1440x1100 and 390x844;
+  screenshots visually reviewed; no horizontal overflow at either size.
+- Check-in button opened correct date-specific terminal instructions; Got it closed it.
+- UI includes fixed calendar, confirmed priorities/status, academic deadlines,
+  interview prep, next interview, application pipeline/details, local-data state,
+  conflict warnings, explicit demo selection and three-second refresh indication.
+- Browser connector had no available sessions; checks used an isolated headless
+  browser with no personal Chrome profile. Screenshots remain local in artifacts/.
