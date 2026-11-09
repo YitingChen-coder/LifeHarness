@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { evaluateTool } from '../src/lib/protection';
+import { evaluateTool, validateGeneratedWrite } from '../src/lib/protection';
 const goodPlan = {
   date: '2026-11-09',
   timezone: 'America/Chicago',
@@ -69,11 +69,19 @@ test('hook allows only valid whole generated files and keeps protected data unch
     file_path = 'data/generated/2026-11-09.json',
     content = JSON.stringify(goodPlan),
   ) => ({ tool_name, tool_input: { file_path, content }, cwd: root });
+  const validate = async (e: ReturnType<typeof event>) =>
+    e.tool_name === 'Write'
+      ? validateGeneratedWrite(
+          join(root, e.tool_input.file_path),
+          e.tool_input.content,
+          root,
+        )
+      : evaluateTool(e, root);
   try {
-    assert.equal((await evaluateTool(event('Write'), root)).allowed, true);
+    assert.equal((await validate(event('Write'))).allowed, true);
     assert.equal(
       (
-        await evaluateTool(
+        await validate(
           event(
             'Write',
             'data/generated/notes.json',
@@ -83,7 +91,6 @@ test('hook allows only valid whole generated files and keeps protected data unch
               reflections: ['A focused morning.'],
             }),
           ),
-          root,
         )
       ).allowed,
       true,
@@ -92,16 +99,12 @@ test('hook allows only valid whole generated files and keeps protected data unch
       'data/sources/academic.json',
       'data/generated/../sources/academic.json',
       'AGENTS.md',
-      '.claude/settings.json',
+      '.codex/hooks.json',
       'src/app/page.tsx',
       'data/generated/arbitrary.json',
       resolve(root, '../escape.json'),
     ])
-      assert.equal(
-        (await evaluateTool(event('Write', path), root)).allowed,
-        false,
-        path,
-      );
+      assert.equal((await validate(event('Write', path))).allowed, false, path);
     for (const name of [
       'Bash',
       'Agent',
@@ -125,27 +128,23 @@ test('hook allows only valid whole generated files and keeps protected data unch
       }),
     ])
       assert.equal(
-        (await evaluateTool(event('Write', undefined, content), root)).allowed,
+        (await validate(event('Write', undefined, content))).allowed,
         false,
       );
     assert.equal(
-      (
-        await evaluateTool(
-          event('Write', 'data/generated/2026-11-10.json'),
-          root,
-        )
-      ).allowed,
+      (await validate(event('Write', 'data/generated/2026-11-10.json')))
+        .allowed,
       false,
     );
     symlinkSync(source, join(root, 'data/generated/2026-11-09.json'));
-    assert.equal((await evaluateTool(event('Write'), root)).allowed, false);
+    assert.equal((await validate(event('Write'))).allowed, false);
     rmSync(join(root, 'data/generated/2026-11-09.json'));
     linkSync(source, join(root, 'data/generated/2026-11-09.json'));
-    assert.equal((await evaluateTool(event('Write'), root)).allowed, false);
+    assert.equal((await validate(event('Write'))).allowed, false);
     rmSync(join(root, 'data/generated/2026-11-09.json'));
     rmSync(join(root, 'data/generated'), { recursive: true });
     symlinkSync(join(root, 'data/sources'), join(root, 'data/generated'));
-    assert.equal((await evaluateTool(event('Write'), root)).allowed, false);
+    assert.equal((await validate(event('Write'))).allowed, false);
     assert.equal(hash(), before);
     assert.equal((await evaluateTool({}, root)).allowed, false);
   } finally {

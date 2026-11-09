@@ -1,0 +1,29 @@
+{
+  "description": "LifeHarness constrained reads, validated generated writes and live clock",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/scripts/protect-data.mjs\"",
+            "timeout": 10,
+            "statusMessage": "Checking LifeHarness data protection"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node \"$(git rev-parse --show-toplevel)/scripts/current-context.mjs\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

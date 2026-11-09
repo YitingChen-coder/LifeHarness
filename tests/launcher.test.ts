@@ -11,19 +11,21 @@ test('launcher only accepts a validated explicit date and emits a restricted con
   const config = JSON.parse(result.stdout);
   assert.equal(config.date, '2026-11-10');
   assert.equal(config.demo, true);
-  assert.deepEqual(config.tools, [
-    'Read',
-    'Glob',
-    'Grep',
-    'Write',
-    'Edit',
-    'Skill',
-  ]);
+  assert.equal(config.binary, 'codex');
+  assert.match(config.cwd, /data\/generated$/);
   assert.match(config.context, /LifeHarness daily planner/);
   assert.match(config.context, /2026-11-10/);
-  assert.equal(config.args.includes('--strict-mcp-config'), true);
-  assert.equal(config.args.includes('--no-chrome'), true);
-  assert.equal(config.args.includes('--append-system-prompt'), true);
+  assert.equal(config.args.includes('--no-daemon'), true);
+  assert.equal(config.args.includes('workspace-write'), true);
+  assert.equal(config.args.includes('never'), true);
+  assert.equal(
+    config.args.some((arg: string) => arg.includes('dangerously')),
+    false,
+  );
+  assert.equal(
+    config.args.some((arg: string) => arg === '--add-dir'),
+    false,
+  );
   for (const args of [
     ['--check', '--date'],
     ['--date', '../../secret'],

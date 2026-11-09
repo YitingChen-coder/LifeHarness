@@ -1,0 +1,11 @@
+# Safe default for direct Codex launches. Use npm run planner to grant writes only
+# to its data/generated working directory. Do not add repository-wide write roots.
+sandbox_mode = "read-only"
+approval_policy = "never"
+web_search = "disabled"
+
+[features]
+hooks = true
+
+[plugins._default]
+enabled = false
