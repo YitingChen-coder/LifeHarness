@@ -10,7 +10,9 @@ Help the user choose a realistic day. Proposals are not permission to save.
 
 1. Use the launch context's planning date and America/Chicago timezone. If no
    launch date is available, ask for today's date; do not guess from sample files.
-2. Read both data/sources/academic.json and data/sources/jobs.json. Use Glob to
+2. Read data/user/task-state.json when present for the latest human-owned task
+   progress; never edit it. Treat done tasks as completed and in_progress tasks as
+   carryover unless the user says otherwise. Read both data/sources/academic.json and data/sources/jobs.json. Use Glob to
    find data/generated/notes.json and previous dated plans; read the latest prior
    plan and today's plan when present. Missing notes mean this is a first check-in.
    Read context/planning.md for reference when needed. If a source is missing or

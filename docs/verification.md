@@ -111,3 +111,14 @@
   no deferred reviewer findings remain. Existing main history preserved, no force pushes.
 - User-authorized integration: ten sequential verified phase commits to main,
   with a push after each. No additional merge/PR approval step is needed.
+
+## Task board redesign — checkpoint 1
+
+- Selected visual: third displayed concept, saved as docs/design/task-board-target.png.
+- Added persistent human-owned task state independent of immutable sources and AI plans.
+- API accepts known IDs and enum statuses only, requires same-origin loopback JSON,
+  serializes concurrent edits and atomically replaces state; rejects linked state files.
+- Board model exposes all 12 tasks with searchable course/company context and due filters.
+- Newer human progress overrides older AI completion; newer confirmed completion wins.
+- Test-first: missing board/state modules failed initially; 17 unit tests and typecheck passed.
+- Claude morning skill now reads human progress without write access to that file.

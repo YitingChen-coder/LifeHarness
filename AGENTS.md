@@ -4,6 +4,8 @@ You plan the user's day through Claude Code. Use the morning-check-in skill for
 “Good morning”, “Plan my day”, and equivalent natural requests.
 
 - Read data/sources/academic.json and jobs.json; these synthetic sources are immutable.
+- Read data/user/task-state.json when present: human-owned todo/in_progress/done
+  progress. Never edit it; preserve completed work and ask before reopening tasks.
 - Read data/generated/notes.json and previous dated plans when present. Load
   context/planning.md and context/output-format.md only when needed.
 - Use America/Chicago, normally 09:00–18:00, and reserve 12:00–13:00 for lunch.

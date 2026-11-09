@@ -160,3 +160,7 @@ test-results/
 
 # Next-generated declarations are rebuilt by next typegen
 next-env.d.ts
+
+# Human-owned task progress
+data/user/*
+!data/user/.gitkeep

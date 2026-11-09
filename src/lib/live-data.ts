@@ -19,6 +19,7 @@ export function mergeLastGood(
     !next.jobs;
   return {
     ...next,
+    taskState: next.taskState ?? previous.taskState,
     academic: next.academic ?? previous.academic,
     jobs: next.jobs ?? previous.jobs,
     plan: next.plan ?? (keepPlan ? previous.plan : null),

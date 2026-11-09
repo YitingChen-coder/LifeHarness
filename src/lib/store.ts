@@ -11,6 +11,7 @@ import {
   type Plan,
 } from './schema';
 import { chicagoDate, validDate } from './dates';
+import { readTaskState, type TaskState } from './task-state';
 export type DashboardData = {
   date: string;
   today: string;
@@ -19,6 +20,7 @@ export type DashboardData = {
   jobs: Jobs | null;
   plan: Plan | null;
   warnings: string[];
+  taskState?: TaskState;
 };
 async function readJson(root: string, path: string): Promise<unknown> {
   const file = join(root, path),
@@ -85,7 +87,16 @@ export async function loadDashboard(
         `The plan for ${date} is unreadable or invalid. Last confirmed content may still be available locally; ask Claude to repair it after confirmation.`,
       );
   }
+  let taskState: TaskState | undefined;
+  try {
+    taskState = await readTaskState(root);
+  } catch {
+    warnings.push(
+      'Task progress is unreadable. Showing the last available progress; retrying automatically.',
+    );
+  }
   return {
+    taskState,
     date,
     today: chicagoDate(),
     fetchedAt: new Date().toISOString(),
