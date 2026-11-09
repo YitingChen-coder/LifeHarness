@@ -563,6 +563,7 @@ h1 {
   padding: 16px 14px 20px;
 }
 .task-card {
+  flex: 0 0 auto;
   border: 1px solid #dedfe6;
   border-radius: 11px;
   background: #fff;
@@ -669,6 +670,7 @@ h1 {
 }
 .task-actions {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   gap: 8px;
   margin-top: 17px;
@@ -685,6 +687,7 @@ h1 {
   cursor: pointer;
 }
 .task-action {
+  margin-left: auto;
   font-size: 12px;
   font-weight: 600;
   color: #7652c0;
@@ -3132,7 +3135,7 @@ h1 {
 .calendar-layout .filter-divider {
   display: none;
 }
-.calendar-layout .kanban {
+.calendar-layout .kanban-board {
   gap: 12px;
 }
 .calendar-layout .kanban-column > header {
@@ -3145,13 +3148,15 @@ h1 {
 .calendar-layout .kanban-column > header > span {
   font-size: 10px;
 }
-.calendar-layout .column-cards {
+.calendar-layout .column-tasks {
   padding: 10px;
   gap: 10px;
 }
+.calendar-layout .task-actions {
+  flex-wrap: wrap;
+}
 .calendar-layout .task-card {
   padding: 12px;
-  min-height: 0;
 }
 .calendar-layout .task-card h3 {
   font-size: 13px;
@@ -3795,7 +3800,7 @@ h1 {
   .calendar-layout .board-heading h1 {
     font-size: 28px;
   }
-  .calendar-layout .kanban {
+  .calendar-layout .kanban-board {
     grid-template-columns: repeat(3, minmax(190px, 1fr));
     overflow-x: auto;
   }
@@ -3940,8 +3945,9 @@ h1 {
   .calendar-layout .timer-controls {
     margin-left: auto;
   }
-  .calendar-layout .kanban {
+  .calendar-layout .kanban-board {
     display: flex;
+    height: auto;
     flex-direction: column;
     overflow: visible;
   }

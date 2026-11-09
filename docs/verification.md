@@ -3,7 +3,7 @@
 - 37 unit/security tests pass, including calendar dates across DST/year boundaries,
   seven-day saved-plan reads, fixed-event deduplication, preview replacement,
   overlap lanes and current completion/manual task-state precedence.
-- 15 browser tests pass: nonmodal assistant beside the calendar, real event pixel
+- 16 browser tests pass: nonmodal assistant beside the calendar, real event pixel
   placement, Day/Week/date navigation, overlap details, in-calendar unsaved preview,
   refusal and explicit confirmation, immediate confirmed refresh, stale-week recovery,
   phone Day view and all preserved task/chat regression behavior.
@@ -91,3 +91,12 @@ chose Codex despite the original assignment's Claude Code requirement.
 
 - academic.json: `2705c5366bf93c6b2c1665846eed64dade7ccc65984e2e6f692aaf45efc39463`
 - jobs.json: `ddac94ecf6b2da0fdfed1d1336f5a03f6b0d888e8be6e40eaeb8735a55f21bbe`
+
+## Task-card clipping regression
+
+Task cards were shrinking to about 24px inside the fixed-height desktop list,
+while their content needed about 200px. Cards now retain their natural height
+and the list scrolls. Removed the zero minimum-height override, corrected stale
+calendar-layout selectors to the actual board/list classes, and let narrow action
+rows wrap. A geometry regression checks all 12 cards and action controls at widths
+1440, 1024, 900, 768, 760, 390 and 320px, plus reaching the final task by scrolling.
