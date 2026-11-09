@@ -1,110 +1,118 @@
 # LifeHarness
 
-A daily task board for classes, coursework and career preparation. Codex runs the
-morning conversation in your terminal; the dashboard displays your confirmed plan.
+A daily task board for classes, coursework and career preparation. **Talk to Codex,
+review your plan and confirm it directly in the webpage.**
 
-![LifeHarness task board](docs/images/dashboard.png)
+![Real Codex browser conversation](docs/images/browser-planner.png)
 
 ## Start
 
-Requires Node.js 22+, npm, and Codex CLI **0.160.0+** with a working login.
-Install Codex using the [official CLI guide](https://developers.openai.com/codex/cli/),
-then run `codex login`. The installed CLI can use your ChatGPT login; this project
-has no model API server or stored API key. Model usage uses your Codex account.
+Requires Node.js 22+, npm and Codex CLI **0.160.0+** signed in with ChatGPT on this
+computer. [Install Codex](https://developers.openai.com/codex/cli/) and use
+`codex login` once if necessary. The app uses that locally signed-in account's Codex
+allowance. It does not call this README/chat, attach to your existing conversation,
+or promise that all ChatGPT products share the same usage pool. API-key accounts
+are rejected by the browser bridge; no API key is stored or requested.
 
 ```sh
 npm install
 npm run dev
 ```
 
-Open http://127.0.0.1:3000 for the title page and `/board` for the board.
-In a second terminal, from this repository:
+Open http://127.0.0.1:3000, enter the task board and click **Plan with Codex**.
+Everything after starting the local app happens in the browser:
+
+1. Choose today or **Sample day** (November 10, 2026).
+2. Click **Good morning** / **Plan my day**, or type a message.
+3. Answer the questions. Codex uses the selected date, coursework, job data,
+   existing progress, confirmed history and cross-day notes.
+4. Review the **Proposed · Not saved** priorities, time blocks and notes.
+5. Ask for changes or click **Don't save**. To persist the displayed version,
+   click **Confirm & save**. Typing “yes” alone does not write files.
+6. Close the chat and open **Schedule**. The board polls every three seconds.
+
+Opening the chat checks local login without running a model. Sending messages
+uses Codex allowance; saving/discarding needs no model call. Closing and reopening
+restores the in-memory conversation while the server remains running (90-minute
+idle limit). A server restart clears drafts/chat, but saved plans/notes remain.
+The bridge preserves the configured model. Credentials never go to the browser.
+
+## Board features
+
+- Drag tasks or use the status menu: To do, In progress, Done.
+- Search, filter academic/career work and find upcoming deadlines.
+- Open task context and run a pausable 25-minute focus timer.
+- Schedule shows fixed events and the confirmed plan; Career shows applications.
+- Task updates persist in data/user; timer state stays in localStorage. Latest
+  manual/confirmed completion wins. Both original source datasets remain read only.
+
+## How browser planning works
+
+The local Next.js server connects to native **Codex app-server over private stdio**,
+checks that authentication is ChatGPT (not an API key), and creates an independent,
+ephemeral read-only thread. Shell execution, MCP, plugins, subagents and web search
+are disabled. The client denies interactive tool requests. Validated snapshots and
+the morning skill/reference rules supply context; the AI only returns a structured
+message/proposal. It cannot save, run an application or change source data.
+
+Server-held drafts have opaque IDs. New messages invalidate the previous draft;
+stale confirmations fail. The server validates schema, source IDs, exact fixed
+events, Chicago dates, task hours, lunch, links and paths before preview and saving.
+Confirmation adds the actual server timestamp and atomically writes the dated plan,
+then notes. A notes failure is explicitly reported as partial success. Duplicate
+confirmation retries do not rewrite an already saved version. No arbitrary JSON,
+file path or process arguments are accepted from the browser.
+
+Mutation endpoints require same-origin loopback requests, bounded JSON and strict
+action schemas. Sessions use HttpOnly SameSite cookies and bounded local memory.
+The app is intended for localhost, with no deployment, app login or database.
+
+## Files and checks
+
+| Location                         | Purpose                                                          |
+| -------------------------------- | ---------------------------------------------------------------- |
+| data/sources/                    | Protected synthetic coursework/career data, November 9–15, 2026. |
+| data/generated/                  | Local gitignored confirmed plans and cross-day memory.           |
+| data/user/                       | Local gitignored human task progress.                            |
+| .agents/skills/morning-check-in/ | Reusable morning planning workflow.                              |
+| context/                         | Preferences and output contract.                                 |
+| src/lib/codex-bridge.ts          | Guarded native app-server protocol, ChatGPT account check.       |
+| src/lib/web-planner.ts           | Validated drafts, refusal/revision and explicit persistence.     |
+| .codex/, scripts/planner.mjs     | Optional terminal harness and its native protection hooks.       |
 
 ```sh
-npm run planner:demo
+npm run check             # Types, unit/security tests, production build
+npm run test:e2e          # Board + browser planner UI regression tests
+npm run test:browser:live # Optional actual Codex flow in a disposable fixture
+npm run test:safety       # Deterministic native-hook process test
+npm run format:check
 ```
 
-The demo selects November 10, 2026. Select the same date on the board. For today,
-use `npm run planner`; for another day use `npm run planner -- --date YYYY-MM-DD`.
-Review the authored project hooks through Codex `/hooks` before the first planning
-conversation. Say **Good morning** or **Plan my day**, answer the questions, review
-the proposed schedule, then explicitly confirm. Refusing or revising a proposal
-must leave plans and notes unchanged. After a successful save, the board polls
-every 3 seconds. The planner keeps your selected model.
+The live check uses your account allowance and never saves to your real generated
+folder. Browser regression model replies are mocked; actual model evidence is
+recorded separately. Playwright needs Chromium (`npx playwright install chromium`)
+or `PLAYWRIGHT_CHROMIUM_EXECUTABLE` pointing to a testing browser.
 
-## Using the board
-
-- Move tasks between To do, In progress and Done by dragging or using the status menu.
-- Search tasks; filter academic/career work and upcoming deadlines.
-- Open a task for context or start a persistent, pausable 25-minute focus timer.
-- Open Schedule for fixed events and the confirmed plan; open Career for applications.
-- Plan with Codex copies the date-specific terminal command. It does not start a model
-  in the browser. The terminal shows the actual agent and tool activity.
-
-Human task changes use a same-origin validated API and stay in `data/user/task-state.json`.
-Codex reads this progress but cannot edit it. Generated plans, notes and task progress
-are local and gitignored. Newer explicit changes take precedence over older completion
-records. The source JSON remains read only to both application and planning sessions.
-
-## Harness
-
-| File                                       | Purpose                                                         |
-| ------------------------------------------ | --------------------------------------------------------------- |
-| `AGENTS.md`                                | Short standing rules; also explicitly supplied by the launcher. |
-| `.agents/skills/morning-check-in/SKILL.md` | Native Codex skill, selected from a morning/planning request.   |
-| `.codex/config.toml`                       | Safe read-only default for an ordinary Codex launch.            |
-| `.codex/hooks.json`                        | Native PreToolUse protection and fresh prompt-time clock.       |
-| `context/`                                 | Planning preferences and output format, loaded when needed.     |
-| `data/sources/`                            | Two synthetic academic and job datasets, November 9–15, 2026.   |
-| `data/generated/`                          | Confirmed dated plans and cross-day notes.                      |
-| `scripts/planner-files.mjs`                | Curated reads and schema-validated atomic JSON writes.          |
-
-The supported launcher starts Codex with `data/generated` as its working directory,
-workspace-write sandbox, no extra writable roots, no command network, no escalation,
-and verified disabled MCP servers, disabled plugin defaults and hook restrictions. It first checks that the OS sandbox blocks
-write-open of a protected source, aborting if this check fails. Hooks allow narrowly
-parsed read commands and validated writes through the helper; arbitrary execution,
-patching and other tool types are denied. Review hook definitions before trusting them.
-Normal launches never bypass hook trust. On unsupported sandbox platforms, the
-launcher fails rather than silently dropping source protection.
-
-Codex chooses questions and priorities and interprets your confirmation. Code validates
-paths, JSON schemas, references, fixed events, lunch and task hours. Neither the helper
-nor the OS sandbox independently proves human agreement. Without trusted hooks,
-sandbox protection still limits writes to generated output, but schema and tool policy
-coverage is reduced: trust the hooks before planning. These restrictions apply to the
-supported launcher, not to your independent development terminal.
-
-## Verify
-
-```sh
-npm run check          # TypeScript, unit/security tests, production build
-npm run test:safety    # Actual hook process; simulated malicious tool payload
-npm run test:e2e       # Desktop/mobile board and refresh regression checks
-npm run test:hook:live # Optional real Codex integration in an isolated fixture
-npm run planner -- --check # Inspect launch policy without running a model
-```
-
-The live test uses your Codex account. Its isolated, inspected hooks can use the CLI's
-hook-trust automation flag; the normal launcher does not. Browser tests require
-Playwright Chromium (`npx playwright install chromium`), or set
-`PLAYWRIGHT_CHROMIUM_EXECUTABLE` to an installed testing browser.
-See [verification](docs/verification.md), [architecture](docs/architecture.md),
-[demo script](docs/demo.md) and [assignment audit](docs/assignment-audit.md).
+The earlier terminal harness remains optional: `npm run planner` / `planner:demo`.
+Its native hooks require review/trust in `/hooks`; browser planning does not require
+a separate interactive Codex terminal. The two modes have different enforcement:
+terminal mode constrains helper writes, browser mode forbids AI writes and uses
+an explicit guarded confirmation endpoint.
 
 ## Troubleshooting
 
-- **No plan:** choose matching dates in terminal and board, then confirm a proposal.
-  Today's date is the default; the sample week needs explicit demo mode.
-- **Codex does not start:** check `codex --version` and `codex login status`.
-  If the sandbox probe fails, use a supported local OS sandbox; do not bypass it.
-- **Tool denied:** inspect `/hooks`. Use only the helper commands in the morning
-  skill. Ask Codex to fix an invalid plan and confirm again before saving.
-- **Source missing / bad JSON / refresh error:** the board shows the error and keeps
-  any last good client data marked stale. Restore files in your development terminal.
-- **Hook changes:** review/trust the changed definition again through `/hooks`.
+- **Connection needs attention:** install Codex and sign in with ChatGPT once on
+  this computer; click **Check connection again**. API-key billing is disabled.
+- **Generation fails or allowance exhausted:** the page shows the failure, keeps
+  your input and does not pretend to answer or save. Check local Codex connectivity
+  and account availability, then retry. Requests time out after 90 seconds.
+- **Invalid proposal:** no draft is saved; ask for a corrected schedule. Fixed
+  conflicts must remain visible. Sources must both be valid before planning.
+- **No saved plan:** match the selected date, then use **Confirm & save**.
+- **Stale draft:** review the newest proposal. A revision invalidates older IDs.
+- **Server restarted:** start a new conversation. Previously saved plans remain.
 
-This is a Codex-only adaptation, explicitly chosen by the owner. The original assignment
-names Claude Code; this version does **not** claim to meet that product-specific requirement.
-Earlier Claude evidence is retained under `docs/archive/` as history, not Codex evidence.
-Recording and classroom submissions are performed by the student. No deployment is required.
+See [current evidence](docs/verification.md), [architecture](docs/architecture.md)
+and the [English demo script](docs/demo.md). This Codex adaptation was requested
+by the owner; the original assignment names Claude Code, so product-specific
+compliance is not claimed. Historical reports are under docs/archive.

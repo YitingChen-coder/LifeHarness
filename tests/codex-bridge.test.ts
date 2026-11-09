@@ -20,7 +20,7 @@ const send=x=>process.stdout.write(JSON.stringify(x)+'\\n');
 rl.createInterface({input:process.stdin}).on('line',l=>{const q=JSON.parse(l);if(q.id===undefined)return;
 let result={};
 if(q.method==='account/read')result={account:{type:${JSON.stringify(type)}}};
-if(q.method==='thread/start'){if(q.params.sandbox!=='read-only'||q.params.approvalPolicy!=='never')process.exit(4);result={thread:{id:'fixture-thread'},sandbox:{type:'readOnly'},approvalPolicy:'never'}}
+if(q.method==='thread/start'){if(q.params.sandbox!=='read-only'||q.params.approvalPolicy!=='never'||q.params.modelProvider!=='openai')process.exit(4);result={thread:{id:'fixture-thread'},sandbox:{type:'readOnly'},approvalPolicy:'never'}}
 send({id:q.id,result});
 if(q.method==='turn/start'){send({method:'item/completed',params:{item:{type:'agentMessage',text:JSON.stringify({message:'How is your energy today?',draft:null})}}});send({method:'turn/completed',params:{turn:{status:'completed',items:[]}}})}
 });`,

@@ -1,58 +1,69 @@
-# Codex migration verification — November 9, 2026
+# Browser Codex verification — November 9, 2026
 
-The owner chose a Codex-only adaptation. Historical Claude records in archive are
-not Codex evidence. No confirmed plan is shipped or fabricated as a real check-in.
+Browser planning is now the primary workflow. Prior terminal-only reports are
+archived; their pending connection results do not describe this successful run.
 
-## Passed locally
+## Real model evidence
 
-- Installed Codex CLI 0.160.0; `codex login status` reports ChatGPT login.
-- Normal `npm run planner:demo` enters the real Codex TUI, with working directory
-  data/generated and the existing GPT-6.1-Sol selection preserved.
-- Native project trust and the two authored hooks were reviewed/trusted in that TUI.
-- `/skills` → List skills → searching `morning` displays the project's
-  `morning-check-in` skill and its planning description. This establishes discovery,
-  not automatic selection during a model response.
-- Launcher enumerates configured MCP servers, disables each with a valid native
-  configuration, then re-enumerates and refuses to launch if any remain enabled.
-- Native `codex sandbox -P :workspace -C data/generated` refuses opening the
-  academic source for writing. The launcher repeats this probe before starting.
-- 26 unit tests pass: date/DST, schemas, references, completion precedence, APIs,
-  stale reads, links/traversal, native command policy and atomic helper writes.
-  Invalid memory leaves the prior saved bytes unchanged and no temporary file.
-- `npm run typecheck`, production build, formatting check and deterministic
-  `npm run test:safety` pass. The latter runs the actual hook process with a
-  simulated malicious Bash payload; it is not a model-tool integration run.
-- 8 Playwright tests pass: landing navigation, responsive board from 320–1487px,
-  filters, task persistence/drag, focus timer, schedule/career, error recovery,
-  focus trapping, and automatic plan refresh. Refresh measured **3408 ms**.
-- Homepage and board screenshots refreshed with current Codex labels.
-- Independent read-only review completed; the stale Claude live-test command and
-  native MCP override compatibility were corrected and reviewed again.
+The actual Codex app-server bridge, using its existing ChatGPT login and configured
+model, returned a morning question. A real browser at localhost:3000 then sent
+Good morning and received an actual context-aware reply naming Algorithms at
+10:30–11:50. Screenshots in images/browser-planner.png and browser-planner-mobile.png
+show that real conversation, not a mocked response.
 
-## Attempted, not passed
+`node scripts/verify-browser-live.mjs` completed successfully in a disposable fixture:
 
-Actual Codex `exec` morning and isolated hook-test sessions were attempted. CLI
-connections to `wss://chatgpt.com/backend-api/codex/responses` failed with
-`Connection refused (os error 61)`, followed by unsuccessful HTTPS fallback/retries.
-The final live test timed out after 120 seconds (ETIMEDOUT) without a model
-response or tool invocation. Direct curl connectivity
-alone does not establish that the authenticated Codex model route works.
+| Step                  | Actual result                                                          |
+| --------------------- | ---------------------------------------------------------------------- |
+| Good morning          | Questions about energy and 09–18 availability around Algorithms.       |
+| Answer                | Validated proposal with 13 time blocks; no plan or notes file created. |
+| Refusal               | Draft discarded; generated plan and memory still absent.               |
+| Revision              | New validated proposal; confirming the old ID was rejected.            |
+| Explicit confirmation | Plan and notes saved with matching actual timestamp.                   |
+| Source integrity      | Both source hashes remained unchanged.                                 |
 
-Consequently **automatic skill selection, questions, proposal/refusal leaving files
-unchanged, explicit agreement saving a plan and notes, and an actual Codex tool call
-being rejected by PreToolUse remain unverified**. Do not present the local schema,
-simulated-hook or browser checks as a substitute. `npm run test:hook:live` now invokes
-Codex in a disposable fixture and requires the actual hook denial; failure cannot
-be reported as a pass. It uses reviewed fixture hooks with the automation-only hook
-trust flag; normal launches never bypass hook trust or sandbox approvals.
+Confirmation timestamp: `2026-11-09T06:29:08.081Z` (00:29 Chicago).
+Machine-readable local evidence: artifacts/browser-live-verification.json (gitignored).
+The script removes its fixture, and no test plan is installed as the owner's real day.
 
-Once the local Codex connection works, run the live test and the conversation in
-[demo.md](demo.md), then record actual outputs here. The implementation migration is
-complete; full model integration acceptance remains pending this connection issue.
+An initial native request exposed a strict structured-output schema requirement:
+every property must be required. Optional block sourceId was replaced by a required
+nullable value in the model contract, normalized to omission for saved breaks.
+The corrected real flow above passed. Earlier terminal-mode connection failures
+remain historical facts, not current evidence that browser planning is offline.
 
-## Protected source hashes
+## Automated checks
+
+- 32 unit/security tests pass: original dates/DST/schema/source protection/API and
+  completion behavior, plus browser draft/refusal/revision/idempotent confirmation,
+  invalid model output, same-origin/body restrictions and protocol/login checks.
+- 12 Playwright tests pass, including direct browser conversation, draft preview,
+  refusal, explicit confirmation, state restoration, phone/desktop layout,
+  signed-out UI, input retention on failure and original board features.
+- Browser regression model replies are mocked to avoid account use; real-model
+  coverage is separately recorded above. These are distinct verification paths.
+- TypeScript, production build and formatting pass. Source files retain their
+  original SHA-256 values.
+- Independent review found stale UI callbacks and an unhandled stdin pipe error;
+  date-keyed remount/request generations and a pipe error handler address them.
+
+## Enforcement and limits
+
+The browser AI thread is read only with shell/MCP/plugins/subagents/web disabled.
+The host rejects interactive tool requests and API-key authentication. A guarded
+same-origin confirmation endpoint accepts only a server-held draft ID, validates
+again and writes plan then notes atomically per file. Plain model text cannot save.
+
+No claim is made that this chat and the local account share a single usage pool.
+The bridge uses the local ChatGPT-authenticated Codex allowance. Model messages
+consume account usage; opening the panel, confirming or discarding does not.
+Conversation drafts expire after idle timeout/server restart; saved files remain.
+
+Native terminal hook model-integration was not rerun for this change. Browser mode
+does not use an AI file-write hook as its primary saving boundary. The owner knowingly
+chose Codex despite the original assignment's Claude Code requirement.
+
+## Protected hashes
 
 - academic.json: `2705c5366bf93c6b2c1665846eed64dade7ccc65984e2e6f692aaf45efc39463`
 - jobs.json: `ddac94ecf6b2da0fdfed1d1336f5a03f6b0d888e8be6e40eaeb8735a55f21bbe`
-
-Both match the pre-migration sources.

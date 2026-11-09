@@ -201,3 +201,53 @@ test('signed-out state disables messages and offers a connection check without m
     .click();
   expect(posts).toBe(0);
 });
+test('a delayed old status response cannot erase a newer model reply', async ({
+  page,
+}) => {
+  let reads = 0;
+  let release!: () => void;
+  let polled!: () => void;
+  const started = new Promise<void>((resolve) => {
+    polled = resolve;
+  });
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  const old = initial();
+  let state = initial();
+  await page.route('**/api/planner**', async (route) => {
+    if (route.request().method() === 'GET') {
+      reads++;
+      if (reads === 2) {
+        polled();
+        await gate;
+        return route.fulfill({ json: old });
+      }
+      return route.fulfill({ json: state });
+    }
+    state = {
+      ...state,
+      messages: [
+        { role: 'assistant', text: 'What is your energy level today?' },
+      ],
+    };
+    return route.fulfill({ json: state });
+  });
+  await page.goto('/board');
+  await page
+    .getByRole('button', { name: 'Plan with Codex', exact: true })
+    .click();
+  await started;
+  await page.getByRole('button', { name: 'Good morning', exact: true }).click();
+  await expect(page.getByRole('log')).toContainText(
+    'What is your energy level today?',
+  );
+  const response = page.waitForResponse(
+    (r) => r.url().includes('/api/planner') && r.request().method() === 'GET',
+  );
+  release();
+  await response;
+  await expect(page.getByRole('log')).toContainText(
+    'What is your energy level today?',
+  );
+});

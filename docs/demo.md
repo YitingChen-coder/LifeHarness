@@ -1,26 +1,26 @@
-# 3–5 minute demo
+# 3–5 minute browser demo
 
-1. **0:00 — Introduce LifeHarness.** “This is my daily execution board. It combines
-   academic and career work, and Codex helps me make a plan I explicitly approve.”
-   Open the title homepage, then the board for November 10, 2026.
-2. **0:30 — Show useful actions.** Filter career tasks, open a task, move it into
-   In progress, and start/pause the focus timer. Open Schedule and Career.
-3. **1:10 — Show the harness.** Use a split view with terminal and browser.
-   Run `npm run planner:demo`. Show `/hooks` and reviewed definitions. Explain that
-   AGENTS.md is standing context and the full morning skill is loaded when selected.
-   Say “Good morning”. Codex reads sources/progress/notes and asks a question or two.
-4. **2:00 — Control the plan.** Answer the questions. Ask to revise or say
-   “Do not save yet.” Show that the generated directory and last check-in do not change.
-   Review the revised proposal, then say “I confirm this plan. Save it and the notes.”
-   Show successful helper results and the board refreshing within five seconds.
-5. **3:20 — Explain enforcement.** “Codex chooses priorities; code constrains paths,
-   schemas and time blocks. The sandbox protects sources; hooks restrict tool calls.”
-   Run `npm run test:safety` in the development terminal for a deterministic
-   malicious-payload rejection. For actual model-tool evidence, run the optional
-   `npm run test:hook:live` separately and show its recorded result.
-6. **4:00 — Close accurately.** “This is my chosen Codex adaptation. The original
-   assignment specifies Claude Code, so this implementation intentionally differs.”
+Start `npm run dev` before recording. Codex must already be installed and signed
+in with ChatGPT on this computer. No second terminal is needed during the demo.
 
-Do not present simulated hook payloads as live agent calls or historical Claude
-records as current Codex verification. Record the actual skill selection, tool output
-and save timestamps. The student handles recording and classroom submission.
+1. **0:00 — Home and board.** “LifeHarness combines coursework and career work in
+   one daily execution board.” Show the title homepage, enter the board, and choose
+   Sample day (November 10, 2026). Show search, task movement and a focus timer.
+2. **0:40 — Talk on the page.** Click Plan with Codex. Show the connected account
+   indicator. “This uses my locally signed-in Codex account; no API key is stored.”
+   Click Good morning. Show the real reply and answer the questions.
+3. **1:30 — Review a proposal.** Show priorities, time blocks, fixed classes and the
+   proposed cross-day notes. “This draft is not saved.” Ask for a change, or click
+   Don't save. Explain that neither changes the saved plan or memory.
+4. **2:30 — Confirm.** Review the final version and click Confirm & save. Show the
+   successful save notice. Close the chat, open Schedule and show automatic refresh.
+5. **3:20 — Explain the harness.** “The reusable skill and reference data provide
+   context. Codex is read only and returns a draft. Server code validates it; only
+   my confirmation button can save that exact version. Source data stays protected.”
+6. **4:00 — State scope.** “The original assignment names Claude Code. I chose this
+   Codex adaptation and kept that difference explicit.” End on the board.
+
+Do not present mocked regression replies as live AI, or historical terminal-hook
+results as browser enforcement. Actual evidence is recorded in verification.md.
+A login/network/allowance failure must be shown honestly; no fake reply is substituted.
+The student handles recording and classroom submission.

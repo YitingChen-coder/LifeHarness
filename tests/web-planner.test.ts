@@ -121,3 +121,52 @@ test('web planner rejects invalid model drafts and clears a previous draft when 
     rmSync(root, { recursive: true, force: true });
   }
 });
+test('structured nullable break sources normalize safely and concurrent generation cannot be reset or confirmed', async () => {
+  const root = fixture();
+  let release!: (value: unknown) => void;
+  try {
+    const s = new PlannerSession(
+      root,
+      '2026-11-09',
+      async () =>
+        new Promise((resolve) => {
+          release = resolve;
+        }),
+    );
+    const pending = s.message('Plan my day');
+    // Wait for the context read to reach the generation boundary.
+    while (!release) await new Promise((resolve) => setImmediate(resolve));
+    assert.throws(() => s.reset(), /already running/);
+    await assert.rejects(s.confirm('not-a-draft'), /already running/);
+    release({
+      message: 'Proposed plan',
+      draft: {
+        ...draft,
+        blocks: [
+          ...draft.blocks,
+          {
+            id: 'buffer',
+            sourceId: null,
+            title: 'Buffer',
+            start: '2026-11-09T10:00:00-06:00',
+            end: '2026-11-09T10:15:00-06:00',
+            kind: 'break',
+            status: 'pending',
+          },
+        ],
+      },
+    });
+    const state = await pending;
+    assert.equal(state.busy, false);
+    assert.equal(state.draft!.plan.blocks.at(-1)!.sourceId, undefined);
+    await s.confirm(state.draft!.id);
+    assert.equal(
+      JSON.parse(
+        readFileSync(join(root, 'data/generated/2026-11-09.json'), 'utf8'),
+      ).blocks.at(-1).sourceId,
+      undefined,
+    );
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

@@ -124,7 +124,11 @@ export async function POST(request: Request) {
     const conflict = /stale|already running|full|busy/i.test(reason);
     return respond(
       id,
-      { error: reason, snapshot: session(id, input.date).snapshot() },
+      {
+        error: reason,
+        snapshot:
+          sessions.get(`${id}:${input.date}`)?.session.snapshot() ?? null,
+      },
       conflict ? 409 : 502,
     );
   }

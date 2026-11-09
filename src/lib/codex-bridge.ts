@@ -68,6 +68,8 @@ export const generateWithCodex: GenerateReply = async (input) => {
     'sandbox_mode="read-only"',
     '-c',
     'approval_policy="never"',
+    '-c',
+    'forced_login_method="chatgpt"',
   ];
   // Capture only in memory: MCP configurations may contain private environment values.
   const listing = await run('codex', ['mcp', 'list', '--json'], {
@@ -92,12 +94,20 @@ export const generateWithCodex: GenerateReply = async (input) => {
   )
     throw new Error('Could not disable all external Codex tools.');
   // A private stdio connection, never a public socket or access to this chat's thread.
+  const env: NodeJS.ProcessEnv = { ...process.env, TSX_DISABLE_CACHE: '1' };
+  for (const key of [
+    'CODEX_PERMISSION_PROFILE',
+    'CODEX_THREAD_ID',
+    'CODEX_SESSION_ID',
+    'CODEX_TOOL_CALL_ID',
+  ])
+    delete env[key];
   const child = spawn(
     'codex',
     [...args, 'app-server', '--listen', 'stdio://'],
     {
       cwd: join(input.root, 'data/generated'),
-      env: { ...process.env, TSX_DISABLE_CACHE: '1' },
+      env,
       stdio: ['pipe', 'pipe', 'pipe'],
     },
   );
@@ -240,6 +250,7 @@ export const generateWithCodex: GenerateReply = async (input) => {
         'This planner requires Codex signed in with ChatGPT. API-key billing is disabled.',
       );
     const thread = await rpc('thread/start', {
+      modelProvider: 'openai',
       cwd: join(input.root, 'data/generated'),
       sandbox: 'read-only',
       approvalPolicy: 'never',
