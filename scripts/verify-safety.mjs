@@ -16,9 +16,9 @@ const result = spawnSync(
   {
     input: JSON.stringify({
       hook_event_name: 'PreToolUse',
-      tool_name: 'Write',
+      tool_name: 'Bash',
       cwd: root,
-      tool_input: { file_path: source, content: '{}' },
+      tool_input: { command: `printf '{}' > '${source}'` },
     }),
     encoding: 'utf8',
     cwd: root,
@@ -29,5 +29,5 @@ const decision = JSON.parse(result.stdout).hookSpecificOutput;
 assert.equal(decision.permissionDecision, 'deny');
 assert.equal(hash(), before);
 console.log(
-  `PASS: ${decision.permissionDecisionReason}\nPASS: protected source SHA-256 unchanged (${before}).\nThis exercises the real hook process with a simulated tool payload; use Claude for the live integration demo.`,
+  `PASS: ${decision.permissionDecisionReason}\nPASS: protected source SHA-256 unchanged (${before}).\nThis exercises the real hook process with a simulated tool payload; use npm run test:hook:live for live Codex integration.`,
 );

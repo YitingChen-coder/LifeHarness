@@ -1,7 +1,8 @@
 # Output contract — load before saving
 
-Files must be complete JSON objects; use Write for each whole file (Edit is blocked
-for generated files to avoid partially validated updates). No Markdown fences.
+Files must be complete JSON objects. Use the constrained planner-files helper
+with the quoted LIFEHARNESS_JSON heredoc described in the morning skill.
+Never use apply_patch, redirection, or arbitrary execution. No Markdown fences.
 
 Daily path: data/generated/YYYY-MM-DD.json. Fields:
 

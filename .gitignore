@@ -150,7 +150,7 @@ vite.config.ts.timestamp-*
 
 # Local harness state and verification artifacts
 .DS_Store
-.claude/settings.local.json
+.codex/config.local.toml
 data/generated/*
 !data/generated/.gitkeep
 !data/generated/README.md

@@ -91,7 +91,7 @@ export default async function Home({
             <div className="home-preview-caption">
               <span>One task at a time.</span>
               <span>
-                Powered by Claude Code
+                Powered by Codex Code
                 <ArrowUpRight size={12} />
               </span>
             </div>
@@ -109,7 +109,7 @@ export default async function Home({
             <div>
               <h3>Plan with context.</h3>
               <p>
-                Check in with Claude. Shape a day around your deadlines, classes
+                Check in with Codex. Shape a day around your deadlines, classes
                 and goals.
               </p>
             </div>

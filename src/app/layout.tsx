@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 export const metadata: Metadata = {
   title: 'LifeHarness | Your day, in focus',
-  description: 'A local-first daily planning dashboard powered by Claude Code.',
+  description: 'A local-first daily planning dashboard powered by Codex Code.',
 };
 export default function RootLayout({
   children,

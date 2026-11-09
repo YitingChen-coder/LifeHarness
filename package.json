@@ -14,8 +14,8 @@
     "test:e2e": "npm run build && playwright test",
     "test:safety": "node scripts/verify-safety.mjs",
     "test:hook:live": "node scripts/test-live-hook.mjs",
-    "format": "prettier --write src scripts tests context docs AGENTS.md README.md package.json tsconfig.json next.config.ts postcss.config.mjs playwright.config.ts .claude",
-    "format:check": "prettier --check src scripts tests context docs AGENTS.md README.md package.json tsconfig.json next.config.ts postcss.config.mjs playwright.config.ts .claude"
+    "format": "prettier --write src scripts tests context docs AGENTS.md README.md package.json tsconfig.json next.config.ts postcss.config.mjs playwright.config.ts .agents .codex/hooks.json",
+    "format:check": "prettier --check src scripts tests context docs AGENTS.md README.md package.json tsconfig.json next.config.ts postcss.config.mjs playwright.config.ts .agents .codex/hooks.json"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

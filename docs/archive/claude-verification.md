@@ -1,3 +1,5 @@
+> Historical record from the previous Claude Code implementation. It does not verify the current Codex implementation.
+
 # Real Claude Code integration evidence
 
 Verified November 8, 2026 (America/Chicago), with Claude Code 2.1.312 and a signed-in

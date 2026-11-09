@@ -47,7 +47,7 @@ export default function Dashboard() {
   const [domain, setDomain] = useState<'all' | 'academic' | 'career'>('all');
   const [query, setQuery] = useState('');
   const [due, setDue] = useState<'all' | 'today' | 'urgent'>('all');
-  const [panel, setPanel] = useState<'schedule' | 'claude' | 'career' | null>(
+  const [panel, setPanel] = useState<'schedule' | 'codex' | 'career' | null>(
     null,
   );
   const [detailId, setDetailId] = useState<string | null>(null);
@@ -195,8 +195,8 @@ export default function Dashboard() {
         </nav>
         <button
           className="rail-button rail-bottom"
-          aria-label="Claude check-in instructions"
-          onClick={() => setPanel('claude')}
+          aria-label="Codex check-in instructions"
+          onClick={() => setPanel('codex')}
         >
           <Terminal size={23} />
         </button>
@@ -254,11 +254,11 @@ export default function Dashboard() {
               className="primary-btn plan-button"
               onClick={() => {
                 setCopied(false);
-                setPanel('claude');
+                setPanel('codex');
               }}
             >
               <Sparkles size={21} />
-              Plan with Claude
+              Plan with Codex
             </button>
           </section>
           <div className="board-meta-line">
@@ -571,15 +571,15 @@ export default function Dashboard() {
           </footer>
         </main>
       </div>
-      {panel === 'claude' && (
-        <Overlay title="Plan with Claude" close={() => setPanel(null)}>
+      {panel === 'codex' && (
+        <Overlay title="Plan with Codex" close={() => setPanel(null)}>
           <div className="checkin-intro">
             <span className="modal-symbol">
               <Sparkles size={27} />
             </span>
             <h3>A plan that starts with you.</h3>
             <p>
-              Claude reads your calendar, tasks and latest progress. Answer a
+              Codex reads your calendar, tasks and latest progress. Answer a
               question or two, then confirm your plan.
             </p>
           </div>
@@ -606,7 +606,7 @@ export default function Dashboard() {
               <span>1</span>Start the planner in your terminal.
             </li>
             <li>
-              <span>2</span>Review Claude’s priorities and schedule.
+              <span>2</span>Review Codex’s priorities and schedule.
             </li>
             <li>
               <span>3</span>Confirm to save. This page updates automatically.
@@ -689,7 +689,7 @@ export default function Dashboard() {
             ))}
             {!(data?.plan?.blocks.length || view?.events.length) && (
               <p className="drawer-empty">
-                No fixed events today. Ask Claude to build a plan around your
+                No fixed events today. Ask Codex to build a plan around your
                 tasks.
               </p>
             )}

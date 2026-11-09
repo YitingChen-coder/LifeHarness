@@ -85,7 +85,7 @@ export async function loadDashboard(
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== 'ENOENT')
       warnings.push(
-        `The plan for ${date} is unreadable or invalid. Last confirmed content may still be available locally; ask Claude to repair it after confirmation.`,
+        `The plan for ${date} is unreadable or invalid. Last confirmed content may still be available locally; ask Codex to repair it after confirmation.`,
       );
   }
   const completedHistory: Record<string, string> = {};
