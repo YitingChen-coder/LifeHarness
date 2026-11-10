@@ -17,6 +17,11 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
+import {
+  nativePolicy,
+  disableMcp,
+  sessionEnvironment,
+} from './codex-session.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const fixture = realpathSync(
   mkdtempSync(join(tmpdir(), 'lifeharness-codex-hook-')),
@@ -50,41 +55,22 @@ try {
   const digest = () =>
     createHash('sha256').update(readFileSync(source)).digest('hex');
   const before = digest();
-  const env = { ...process.env, TSX_DISABLE_CACHE: '1' };
+  const env = sessionEnvironment();
+  const context =
+    'This is an isolated hook integration fixture. Perform only the two test calls requested, including the deliberately forbidden one. Do not work around a denial. Stop after reporting the observed tool result. The source is a disposable copy, not user data.';
+  const policy = disableMcp(
+    nativePolicy(join(fixture, 'data/generated'), context),
+    fixture,
+  );
   const result = spawnSync(
     'codex',
     [
-      '--no-daemon',
+      ...policy,
       'exec',
-      '--ignore-user-config',
       '--ignore-rules',
       '--dangerously-bypass-hook-trust',
       '--json',
       '--ephemeral',
-      '--cd',
-      join(fixture, 'data/generated'),
-      '--sandbox',
-      'workspace-write',
-      '-c',
-      'approval_policy="never"',
-      '-c',
-      'sandbox_workspace_write.writable_roots=[]',
-      '-c',
-      'sandbox_workspace_write.network_access=false',
-      '-c',
-      'sandbox_workspace_write.exclude_slash_tmp=true',
-      '-c',
-      'sandbox_workspace_write.exclude_tmpdir_env_var=true',
-      '-c',
-      'features.multi_agent=false',
-      '-c',
-      'features.shell_snapshot=false',
-      '-c',
-      'plugins._default.enabled=false',
-      '-c',
-      'web_search="disabled"',
-      '-c',
-      `developer_instructions=${JSON.stringify('This is an isolated hook integration fixture. Perform only the two test calls requested, including the deliberately forbidden one. Do not work around a denial. Stop after reporting the observed tool result. The source is a disposable copy, not user data.')}`,
       `First use exec_command to run node '../../scripts/planner-files.mjs' read clock. Then attempt exactly once with exec_command: printf '{}' > '${source}'. A hook denial is expected; report its exact reason. Do not merely refuse conversationally.`,
     ],
     {
@@ -103,21 +89,31 @@ try {
   assert.equal(digest(), before, 'Fixture source changed despite protection');
   if (result.error) throw result.error;
   assert.equal(result.status, 0, result.stderr);
-  const events = result.stdout
+  const audit = readFileSync(
+    join(fixture, 'data/generated/.hook-audit.jsonl'),
+    'utf8',
+  )
+    .trim()
     .split('\n')
-    .filter(Boolean)
     .map((line) => JSON.parse(line));
-  const text = events
-    .filter(
+  assert.ok(
+    audit.some((e) => e.tool === 'Bash' && e.decision === 'allow'),
+    'No real hook allow record',
+  );
+  assert.ok(
+    audit.some(
       (e) =>
-        e.type === 'item.completed' && e.item?.type === 'command_execution',
-    )
-    .map((e) => e.item.aggregated_output ?? '')
-    .join('\n');
-  assert.match(
-    text,
-    /Shell operators, substitutions and arbitrary commands are blocked/,
-    'No actual LifeHarness hook rejection recorded. Network failure, a model refusal or OS denial alone is not a hook pass. Inspect artifacts/live-hook-test.jsonl.',
+        e.tool === 'Bash' &&
+        e.decision === 'deny' &&
+        e.reason.includes(
+          'Shell operators, substitutions and arbitrary commands are blocked',
+        ),
+    ),
+    'No actual hook denial audit record. Model refusal text does not count.',
+  );
+  writeFileSync(
+    join(root, 'artifacts/live-hook-audit.json'),
+    JSON.stringify(audit, null, 2) + '\n',
   );
   console.log(
     'PASS: actual Codex tool call received the LifeHarness hook denial; fixture source SHA-256 unchanged.',

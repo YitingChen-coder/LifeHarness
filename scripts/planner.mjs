@@ -3,6 +3,11 @@ import { readFileSync, existsSync, realpathSync, lstatSync } from 'node:fs';
 import { dirname, resolve, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
+import {
+  nativePolicy,
+  disableMcp,
+  sessionEnvironment,
+} from './codex-session.mjs';
 const root = realpathSync(
   resolve(dirname(fileURLToPath(import.meta.url)), '..'),
 );
@@ -40,33 +45,7 @@ try {
   const context =
     readFileSync(join(root, 'AGENTS.md'), 'utf8') +
     `\nLifeHarness launch context\nRepository root: ${root}\nPlanning date: ${date}. Explicit demo mode: ${demo}. Actual Chicago date: ${today}.\nActual launch time: ${new Date().toISOString()}. Read the live clock for saves.\nCWD is data/generated. Use ../../scripts/planner-files.mjs for reads and confirmed writes.\nInitialize the planner without writing files, then wait for the user's morning request.\n`;
-  const args = [
-    '--no-daemon',
-    '--cd',
-    cwd,
-    '--sandbox',
-    'workspace-write',
-    '--ask-for-approval',
-    'never',
-    '-c',
-    'sandbox_workspace_write.writable_roots=[]',
-    '-c',
-    'sandbox_workspace_write.network_access=false',
-    '-c',
-    'sandbox_workspace_write.exclude_slash_tmp=true',
-    '-c',
-    'sandbox_workspace_write.exclude_tmpdir_env_var=true',
-    '-c',
-    'plugins._default.enabled=false',
-    '-c',
-    'web_search="disabled"',
-    '-c',
-    'features.multi_agent=false',
-    '-c',
-    'features.shell_snapshot=false',
-    '-c',
-    `developer_instructions=${JSON.stringify(context)}`,
-  ];
+  const args = nativePolicy(cwd, context);
   if (check) {
     console.log(
       JSON.stringify(
@@ -97,36 +76,7 @@ try {
   const match = version.stdout.match(/(\d+)\.(\d+)\.(\d+)/);
   if (!match || (Number(match[1]) === 0 && Number(match[2]) < 160))
     throw new Error('Codex CLI >=0.160.0 is required.');
-  // Enumerate names only in memory; never print MCP command/env credentials.
-  const mcp = spawnSync('codex', ['mcp', 'list', '--json'], {
-    encoding: 'utf8',
-    maxBuffer: 1024 * 1024,
-  });
-  if (mcp.status !== 0)
-    throw new Error(
-      'Could not inspect MCP configuration; refusing an uncontrolled planner launch.',
-    );
-  for (const server of JSON.parse(mcp.stdout)) {
-    if (
-      typeof server.name !== 'string' ||
-      !/^[A-Za-z0-9_-]+$/.test(server.name)
-    )
-      throw new Error('Invalid MCP configuration');
-    const transport =
-      server.transport?.type === 'stdio'
-        ? 'command="node"'
-        : `url=${JSON.stringify(server.transport?.url ?? '')}`;
-    args.push('-c', `mcp_servers.${server.name}={enabled=false,${transport}}`);
-  }
-  const disabled = spawnSync('codex', [...args, 'mcp', 'list', '--json'], {
-    encoding: 'utf8',
-    maxBuffer: 1024 * 1024,
-  });
-  if (
-    disabled.status !== 0 ||
-    JSON.parse(disabled.stdout).some((server) => server.enabled !== false)
-  )
-    throw new Error('Could not verify that all MCP servers are disabled.');
+  disableMcp(args, cwd);
   const probe = spawnSync(
     'codex',
     [
@@ -142,7 +92,7 @@ try {
       '-e',
       `const fs=require('fs');try{const fd=fs.openSync(${JSON.stringify(join(root, 'data/sources/academic.json'))},'a');fs.closeSync(fd);process.exit(3);}catch(e){if(!['EPERM','EACCES','EROFS'].includes(e.code))throw e;}`,
     ],
-    { encoding: 'utf8' },
+    { encoding: 'utf8', env: sessionEnvironment() },
   );
   if (probe.status !== 0)
     throw new Error(
@@ -154,7 +104,7 @@ try {
   const child = spawnSync('codex', args, {
     cwd,
     stdio: 'inherit',
-    env: { ...process.env, TSX_DISABLE_CACHE: '1' },
+    env: sessionEnvironment(),
   });
   if (child.error) throw child.error;
   process.exit(child.status ?? 1);
