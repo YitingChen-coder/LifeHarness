@@ -21,6 +21,7 @@ import {
   nativePolicy,
   disableMcp,
   sessionEnvironment,
+  prepareNativeWorkspace,
 } from './codex-session.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const fixture = realpathSync(
@@ -55,6 +56,7 @@ try {
   const digest = () =>
     createHash('sha256').update(readFileSync(source)).digest('hex');
   const before = digest();
+  prepareNativeWorkspace(join(fixture, 'data/generated'));
   const env = sessionEnvironment();
   const context =
     'This is an isolated hook integration fixture. Perform only the two test calls requested, including the deliberately forbidden one. Do not work around a denial. Stop after reporting the observed tool result. The source is a disposable copy, not user data.';

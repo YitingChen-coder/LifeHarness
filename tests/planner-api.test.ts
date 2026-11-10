@@ -1,4 +1,13 @@
-import test from 'node:test';
+import test, { before, after } from 'node:test';
+const previousBrowserMode = process.env.LIFEHARNESS_BROWSER_CHAT;
+before(() => {
+  process.env.LIFEHARNESS_BROWSER_CHAT = '1';
+});
+after(() => {
+  if (previousBrowserMode === undefined)
+    delete process.env.LIFEHARNESS_BROWSER_CHAT;
+  else process.env.LIFEHARNESS_BROWSER_CHAT = previousBrowserMode;
+});
 import assert from 'node:assert/strict';
 import { GET, POST } from '../src/app/api/planner/route';
 const request = (

@@ -62,6 +62,13 @@ function respond(id: string, body: unknown, status = 200) {
   });
 }
 export async function GET(request: Request) {
+  if (process.env.LIFEHARNESS_BROWSER_CHAT !== '1')
+    return Response.json(
+      {
+        error: 'Assignment mode: use the native Codex terminal for check-ins.',
+      },
+      { status: 404 },
+    );
   if (!localRequest(request))
     return Response.json(
       { error: 'Open this planner on localhost.' },
@@ -86,6 +93,13 @@ export async function GET(request: Request) {
   }
 }
 export async function POST(request: Request) {
+  if (process.env.LIFEHARNESS_BROWSER_CHAT !== '1')
+    return Response.json(
+      {
+        error: 'Assignment mode: use the native Codex terminal for check-ins.',
+      },
+      { status: 404 },
+    );
   if (!localRequest(request, true))
     return Response.json(
       { error: 'Planner actions must come from this local page.' },

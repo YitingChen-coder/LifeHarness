@@ -47,7 +47,7 @@ test('kanban is readable, all tasks searchable, filters and schedule work across
     page.getByRole('region', { name: 'Schedule calendar' }),
   ).toContainText('Systems Programming');
   await page
-    .getByRole('button', { name: 'Plan with Codex', exact: true })
+    .getByRole('button', { name: 'Terminal check-in', exact: true })
     .click();
   await expect(
     page.getByRole('complementary', { name: 'Planning assistant' }),
@@ -220,7 +220,7 @@ test('source errors retain tasks and the assistant does not block navigation', a
   ).toBeVisible({ timeout: 5000 });
   await expect(page.getByRole('article')).toHaveCount(12);
   const opener = page.getByRole('button', {
-    name: 'Plan with Codex',
+    name: 'Terminal check-in',
     exact: true,
   });
   await opener.click();
@@ -233,7 +233,7 @@ test('source errors retain tasks and the assistant does not block navigation', a
     page.getByRole('heading', { name: 'Your calendar', exact: true }),
   ).toBeVisible();
   await expect(
-    page.getByRole('textbox', { name: 'Message Codex' }),
+    page.getByRole('button', { name: 'Copy planner command' }),
   ).toBeVisible();
 });
 test('job tracker keeps application statuses and upcoming interviews accessible', async ({

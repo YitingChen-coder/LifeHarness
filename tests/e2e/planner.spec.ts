@@ -1,4 +1,8 @@
 import { test, expect } from '@playwright/test';
+test.skip(
+  process.env.LIFEHARNESS_BROWSER_CHAT !== '1',
+  'Optional embedded browser mode; assignment default uses the native terminal.',
+);
 const date = '2026-11-10';
 const initial = () => ({
   date,

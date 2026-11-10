@@ -7,7 +7,17 @@ test('calendar opens directly beside the assistant, positions real events at the
   const calendar = page.getByRole('region', { name: 'Schedule calendar' });
   const panel = page.getByRole('complementary', { name: 'Planning assistant' });
   await expect(calendar).toBeVisible();
+  await expect(panel).toHaveCount(0);
+  await page
+    .getByRole('button', { name: 'Terminal check-in', exact: true })
+    .click();
   await expect(panel).toBeVisible();
+  await expect(
+    page.getByRole('region', { name: 'Terminal check-in guide' }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole('textbox', { name: 'Message Codex' }),
+  ).toHaveCount(0);
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await expect(
     page.getByRole('button', { name: 'Open schedule', exact: true }),
@@ -62,6 +72,10 @@ test('calendar displays a validated draft in place, discards without saving, and
   page,
   request,
 }) => {
+  test.skip(
+    process.env.LIFEHARNESS_BROWSER_CHAT !== '1',
+    'In-calendar browser drafts are optional, not the assignment workflow.',
+  );
   const date = '2026-11-10';
   const actual = await (await request.get('/api/calendar?date=' + date)).json();
   const state: any = {
@@ -191,9 +205,9 @@ test('calendar retains a marked last good week on refresh failure and phones sta
     ).toBe(true);
   }
   await page
-    .getByRole('button', { name: 'Plan with Codex', exact: true })
+    .getByRole('button', { name: 'Terminal check-in', exact: true })
     .click();
   await expect(
-    page.getByRole('textbox', { name: 'Message Codex' }),
+    page.getByRole('button', { name: 'Copy planner command' }),
   ).toBeInViewport();
 });

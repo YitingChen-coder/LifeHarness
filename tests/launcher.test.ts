@@ -56,3 +56,32 @@ test('native planner child does not inherit parent permissions or thread identif
   ])
     assert.equal(env[key], undefined);
 });
+test('native heredoc scratch space is created inside generated output and refuses a linked directory', async () => {
+  const { prepareNativeWorkspace, nativePolicy } =
+    await import('../scripts/codex-session.mjs');
+  const { mkdtempSync, realpathSync, mkdirSync, rmSync, symlinkSync } =
+    await import('node:fs');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const root = realpathSync(
+    mkdtempSync(join(tmpdir(), 'lifeharness-temp-policy-')),
+  );
+  try {
+    const cwd = join(root, 'generated');
+    mkdirSync(cwd);
+    const temp = prepareNativeWorkspace(cwd);
+    assert.equal(temp, join(cwd, '.planner-tmp'));
+    assert.ok(
+      nativePolicy(cwd, 'rules').some(
+        (value) =>
+          value.includes('shell_environment_policy.set=') &&
+          value.includes(temp),
+      ),
+    );
+    rmSync(temp, { recursive: true });
+    symlinkSync(root, temp);
+    assert.throws(() => prepareNativeWorkspace(cwd), /Unsafe/);
+  } finally {
+    rmSync(root, { recursive: true, force: true });
+  }
+});

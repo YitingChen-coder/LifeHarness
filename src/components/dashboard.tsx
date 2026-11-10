@@ -33,6 +33,7 @@ import { useDashboard } from './use-dashboard';
 import { useFocus } from './use-focus';
 import { Overlay } from './overlay';
 import { PlannerChat } from './planner-chat';
+import { TerminalGuide } from './terminal-guide';
 import { CalendarView } from './calendar-view';
 import type { DraftPreview } from '@/lib/web-planner';
 import { TaskCard } from './task-card';
@@ -42,12 +43,16 @@ const columns = [
   { status: 'in_progress', label: 'In progress', icon: Play },
   { status: 'done', label: 'Done', icon: CheckCircle2 },
 ] as const;
-export default function Dashboard() {
+export default function Dashboard({
+  browserChatEnabled = false,
+}: {
+  browserChatEnabled?: boolean;
+}) {
   const [date, setDate] = useState(chicagoDate());
   const [workspaceView, setWorkspaceView] = useState<'calendar' | 'tasks'>(
     'calendar',
   );
-  const [assistantOpen, setAssistantOpen] = useState(true);
+  const [assistantOpen, setAssistantOpen] = useState(browserChatEnabled);
   const [preview, setPreview] = useState<DraftPreview | null>(null);
   const [calendarVersion, setCalendarVersion] = useState(0);
   const assistant = useRef<HTMLElement>(null);
@@ -298,7 +303,7 @@ export default function Dashboard() {
               }}
             >
               <Sparkles size={21} />
-              Plan with Codex
+              {browserChatEnabled ? 'Plan with Codex' : 'Terminal check-in'}
             </button>
           </section>
           <div className="board-meta-line">
@@ -650,8 +655,14 @@ export default function Dashboard() {
               <Sparkles size={20} />
             </span>
             <div>
-              <h2>Your assistant</h2>
-              <p>A plan that works for you.</p>
+              <h2>
+                {browserChatEnabled ? 'Your assistant' : 'Terminal check-in'}
+              </h2>
+              <p>
+                {browserChatEnabled
+                  ? 'A plan that works for you.'
+                  : 'Your calendar + native Codex.'}
+              </p>
             </div>
             <button
               className="icon-btn"
@@ -661,12 +672,16 @@ export default function Dashboard() {
               <X size={18} />
             </button>
           </header>
-          <PlannerChat
-            key={date}
-            date={date}
-            onDraftChange={setPreview}
-            onSaved={savedPlan}
-          />
+          {browserChatEnabled ? (
+            <PlannerChat
+              key={date}
+              date={date}
+              onDraftChange={setPreview}
+              onSaved={savedPlan}
+            />
+          ) : (
+            <TerminalGuide date={date} />
+          )}
         </aside>
       )}
       {panel === 'career' && (

@@ -22,6 +22,7 @@ import {
   nativePolicy,
   disableMcp,
   sessionEnvironment,
+  prepareNativeWorkspace,
 } from './codex-session.mjs';
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const fixture = realpathSync(
@@ -67,6 +68,7 @@ try {
     readFileSync(join(fixture, 'AGENTS.md'), 'utf8') +
     '\nLifeHarness launch context. Planning date: 2026-11-10. Explicit demo mode. CWD data/generated. Use read clock for actual save timestamps. This is an isolated check-in verification; follow the normal morning workflow and wait for user agreement.';
   const cwd = join(fixture, 'data/generated');
+  prepareNativeWorkspace(cwd);
   const policy = disableMcp(nativePolicy(cwd, context), fixture);
   const sourceHash = () =>
     createHash('sha256')

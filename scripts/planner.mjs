@@ -7,6 +7,7 @@ import {
   nativePolicy,
   disableMcp,
   sessionEnvironment,
+  prepareNativeWorkspace,
 } from './codex-session.mjs';
 const root = realpathSync(
   resolve(dirname(fileURLToPath(import.meta.url)), '..'),
@@ -76,6 +77,7 @@ try {
   const match = version.stdout.match(/(\d+)\.(\d+)\.(\d+)/);
   if (!match || (Number(match[1]) === 0 && Number(match[2]) < 160))
     throw new Error('Codex CLI >=0.160.0 is required.');
+  prepareNativeWorkspace(cwd);
   disableMcp(args, cwd);
   const probe = spawnSync(
     'codex',
