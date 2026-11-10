@@ -1,58 +1,46 @@
-# Browser-native architecture
+# Assignment-first native architecture
 
-Next.js App Router, TypeScript and Tailwind render an English homepage, kanban and
-a persistent planning side panel. The calendar is the default workspace; Tasks
-retains the execution board. Local JSON holds two protected domains and generated output.
-No database, website login, API key or hosted model gateway is required.
+Primary flow: two protected sources + notes/history → native Codex morning skill →
+questions → timed proposal → explicit user agreement → validated helper writes plan
+and notes → local calendar/task dashboard automatically refreshes.
 
-Browser message → guarded local API → validated source/progress/history/notes snapshot
-and morning rules → native Codex app-server stdio → ephemeral read-only model thread
-→ structured reply → server validation → visible proposal → explicit button →
-validated atomic plan/notes writes → dashboard refresh.
+The browser displays the calendar, selected-day status, tasks and career information.
+It does not invoke a model or confirm AI plans in default mode. Its Terminal check-in
+guide supplies the date-specific native launch command. Record the browser on the
+left and Codex on the right. No deployment, database, website login or API key.
 
-The bridge checks native authentication is ChatGPT before any model call. It uses
-that local account, preserving model choice, not an existing conversation/thread.
-No credentials, raw process streams or private account identity are sent to the UI.
-MCP servers are enumerated, disabled and rechecked; plugin, shell, subagent and web
-features are disabled. No AI write capability is granted. Interactive tool requests
-are rejected. Native hooks are an additional terminal-mode mechanism; browser saving
-is enforced by host code and cannot be triggered by model text.
+AGENTS.md is short standing context, discovered automatically (shown in native
+/status) and explicitly supplied by the launcher. Native debug prompt inspection
+confirms its presence while full skill and planning-reference bodies are absent.
+Native skill metadata enables selection from Good morning / Plan my day; actual
+source/skill reads are recorded in native integration evidence.
 
-The server holds the transcript and draft in a bounded 90-minute cookie-scoped
-in-memory session. The browser receives an opaque draft version. New generation
-clears prior proposals; refusal writes nothing. Confirmation accepts only a draft ID,
-not plan data, and adds the actual timestamp. All content is revalidated against
-current source IDs and fixed events; symlinks/hardlinks and invalid paths are denied.
-Plan and memory are separate atomic saves; memory failure is reported explicitly.
-Duplicate confirmations are idempotent. Requests serialize per session.
+The launcher uses data/generated as the workspace-write root, no extra write roots,
+no escalation/subprocess network, disabled MCP/plugins/web and a clean parent-session
+environment. Startup checks the protected source cannot be opened for writing.
+Heredoc scratch files stay in data/generated/.planner-tmp, never an expanded /tmp root.
 
-The webpage exposes priorities, time blocks and proposed memory before saving.
-Date-keyed component instances and request generations prevent old responses from
-replacing a new date/action. Connection errors preserve input; draft schema errors
-never turn into silent saves or synthetic model replies.
+Native PreToolUse permits narrowly parsed curated reads and the helper's complete
+JSON writes only. It validates dates, schemas, references, fixed events, task hours,
+lunch and safe nonlinked paths. Source/config/app writes, arbitrary commands, patches
+and other tool types are denied. Native UserPromptSubmit provides the actual clock.
+A bounded audit stores tool IDs, decisions, reasons and command hashes. Audit failure
+blocks the operation; normal launch never bypasses native hook trust.
 
-Read/status routes require loopback hosts. Mutation routes additionally require
-exact same-origin, JSON body limits and strict action schemas. HttpOnly SameSite
-cookies contain only opaque session IDs. No external-model or arbitrary file-write
-endpoint exists. A separate validated task-status API writes only human progress.
-The focus timer persists in localStorage and dashboard data polls every 3 seconds.
+The model interprets conversational agreement. Code validates file operations but
+cannot independently prove human consent. Refusal/revision must leave plan/notes
+unchanged. The helper atomically saves a plan first, then notes separately; a notes
+failure must be reported honestly. Sources and human progress are never edited by AI.
 
-Official protocol and account behavior:
-[Codex app-server](https://learn.chatgpt.com/docs/app-server).
+The read-only week API loads all seven plans and source commitments. Chicago calendar
+arithmetic handles DST dates, overlaps use lanes, and current task status follows the
+shared manual/confirmed completion precedence. Three-second polling retains marked
+last-good data on error. Human task actions write only data/user, not original sources.
 
-## Calendar view
+Optional embedded browser chat remains gated by LIFEHARNESS_BROWSER_CHAT=1 on the
+server; its API returns 404 by default. It is a separate, earlier architecture and
+is not used as evidence for native skill selection, hooks or assignment recording.
 
-The read-only /api/calendar endpoint loads exactly one Monday–Sunday week, including
-all seven confirmed plans. Calendar dates use calendar-day arithmetic across DST.
-Fixed source events are deduplicated from plan blocks and shown without a saved
-plan. An interval layout assigns overlapping commitments separate lanes. Current
-task progress uses the same manual/completion precedence as the task board.
-
-The assistant emits the existing server-validated draft to the selected-day calendar
-as dashed unsaved blocks. This replaces that day's old task schedule only in preview,
-leaving source commitments unchanged. Refusal removes the preview; confirmation
-refreshes week data immediately. Normal polls retain marked last-good data on errors.
-
-Desktop has independent calendar and conversation scrolling. Phones default to Day,
-with the assistant stacked below and reachable from Plan with Codex. Source times
-outside 09–18 stay visible; task hours remain governed by the original validator.
+Official native references: [hooks](https://learn.chatgpt.com/docs/hooks),
+[skills](https://learn.chatgpt.com/docs/build-skills),
+[commands](https://learn.chatgpt.com/docs/developer-commands).

@@ -1,0 +1,18 @@
+[
+  {
+    "at": "2026-11-10T06:18:32.410Z",
+    "tool": "Bash",
+    "toolUseId": "exec-76c68d62-0af0-4aab-9b01-1efb8970489a",
+    "decision": "allow",
+    "reason": "Constrained planner read",
+    "commandSha256": "b97ce1f82e980f849da50efb976c28a22b21e786e62e693131fd28ebeabca77a"
+  },
+  {
+    "at": "2026-11-10T06:18:35.500Z",
+    "tool": "Bash",
+    "toolUseId": "exec-7e48c72b-6657-4af5-b575-31bdf3e5b3cf",
+    "decision": "deny",
+    "reason": "Shell operators, substitutions and arbitrary commands are blocked",
+    "commandSha256": "e25a9b9b7ac0eb2cf4c30f77a1cd99b4e9450a2bd48ab48482637a366f557fd1"
+  }
+]

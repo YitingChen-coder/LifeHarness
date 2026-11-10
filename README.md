@@ -1,126 +1,151 @@
-# LifeHarness
+# LifeHarness — Assignment 6
 
-A calendar-first workspace for classes, coursework and career preparation. **See
-your schedule and talk to Codex side by side, then confirm the plan on the page.**
+A local calendar and task dashboard, paired with a **real native Codex terminal**
+for morning planning. Record the webpage on the left and Codex on the right.
 
-![Calendar and persistent planning assistant](docs/images/calendar-workspace.png)
+The assignment names Claude Code. The owner does not have it and explicitly chose
+Codex as the platform substitution; the remaining workflow follows the assignment.
+This is not a claim that the instructor approved the substitution.
 
-## Start
+## Run the assignment workflow
 
-Requires Node.js 22+, npm and Codex CLI **0.160.0+** signed in with ChatGPT on this
-computer. [Install Codex](https://developers.openai.com/codex/cli/) and use
-`codex login` once if necessary. The app uses that locally signed-in account's Codex
-allowance. It does not call this README/chat, attach to your existing conversation,
-or promise that all ChatGPT products share the same usage pool. API-key accounts
-are rejected by the browser bridge; no API key is stored or requested.
+Requires Node.js 22+, npm, and Codex CLI **0.160.0+** signed in with ChatGPT.
+[Install Codex](https://developers.openai.com/codex/cli/) and `codex login` if needed.
+No API key, database, deployment or website login is required.
+
+Start the local webpage:
 
 ```sh
 npm install
 npm run dev
 ```
 
-Open http://127.0.0.1:3000 and click **Open calendar**. Your weekly schedule and
-planning assistant are visible together. **Tasks** retains your task board.
-Everything after starting the local app happens in the browser:
-
-1. Choose today or **Sample day** (November 10, 2026).
-2. Click **Good morning** / **Plan my day**, or type a message.
-3. Answer the questions. Codex uses the selected date, coursework, job data,
-   existing progress, confirmed history and cross-day notes.
-4. Review priorities and notes in the panel. The calendar previews proposed focus
-   blocks with dashed outlines marked **Draft · not saved**.
-5. Ask for changes or click **Don't save**. To persist the displayed version,
-   click **Confirm & save**. Typing “yes” alone does not write files.
-6. The calendar updates immediately after saving and polls every three seconds
-   for other changes. Keep the assistant open while navigating the calendar.
-
-Opening the chat checks local login without running a model. Sending messages
-uses Codex allowance; saving/discarding needs no model call. Closing and reopening
-restores the in-memory conversation while the server remains running (90-minute
-idle limit). A server restart clears drafts/chat, but saved plans/notes remain.
-The bridge preserves the configured model. Credentials never go to the browser.
-
-## Calendar and task features
-
-- Calendar opens by default with all seven days, fixed classes/interviews and saved
-  task blocks. Day/Week, Today, previous/next and date controls navigate directly.
-- Overlapping commitments appear side by side. Deadlines stay separate from actual
-  scheduled time; unsaved drafts do not become confirmed events.
-- Phones start with a readable Day view and stack the assistant below the calendar.
-- In **Tasks**, drag cards or use the status menu: To do, In progress, Done.
-- Search, filter academic/career work and find upcoming deadlines.
-- Open task context and run a pausable 25-minute focus timer.
-- The calendar is always visible beside desktop chat; Career shows applications.
-- Task updates persist in data/user; timer state stays in localStorage. Latest
-  manual/confirmed completion wins. Both original source datasets remain read only.
-
-## How browser planning works
-
-The local Next.js server connects to native **Codex app-server over private stdio**,
-checks that authentication is ChatGPT (not an API key), and creates an independent,
-ephemeral read-only thread. Shell execution, MCP, plugins, subagents and web search
-are disabled. The client denies interactive tool requests. Validated snapshots and
-the morning skill/reference rules supply context; the AI only returns a structured
-message/proposal. It cannot save, run an application or change source data.
-
-Server-held drafts have opaque IDs. New messages invalidate the previous draft;
-stale confirmations fail. The server validates schema, source IDs, exact fixed
-events, Chicago dates, task hours, lunch, links and paths before preview and saving.
-Confirmation adds the actual server timestamp and atomically writes the dated plan,
-then notes. A notes failure is explicitly reported as partial success. Duplicate
-confirmation retries do not rewrite an already saved version. No arbitrary JSON,
-file path or process arguments are accepted from the browser.
-
-Mutation endpoints require same-origin loopback requests, bounded JSON and strict
-action schemas. Sessions use HttpOnly SameSite cookies and bounded local memory.
-The app is intended for localhost, with no deployment, app login or database.
-
-## Files and checks
-
-| Location                         | Purpose                                                          |
-| -------------------------------- | ---------------------------------------------------------------- |
-| data/sources/                    | Protected synthetic coursework/career data, November 9–15, 2026. |
-| data/generated/                  | Local gitignored confirmed plans and cross-day memory.           |
-| data/user/                       | Local gitignored human task progress.                            |
-| .agents/skills/morning-check-in/ | Reusable morning planning workflow.                              |
-| context/                         | Preferences and output contract.                                 |
-| src/lib/codex-bridge.ts          | Guarded native app-server protocol, ChatGPT account check.       |
-| src/lib/web-planner.ts           | Validated drafts, refusal/revision and explicit persistence.     |
-| .codex/, scripts/planner.mjs     | Optional terminal harness and its native protection hooks.       |
+Open http://127.0.0.1:3000 and click **Open calendar**. Keep that browser on the left.
+In a second terminal opened in this project, run:
 
 ```sh
-npm run check             # Types, unit/security tests, production build
-npm run test:e2e          # Board + browser planner UI regression tests
-npm run test:browser:live # Optional actual Codex flow in a disposable fixture
-npm run test:safety       # Deterministic native-hook process test
-npm run format:check
+npm run planner:demo
 ```
 
-The live check uses your account allowance and never saves to your real generated
-folder. Browser regression model replies are mocked; actual model evidence is
-recorded separately. Playwright needs Chromium (`npx playwright install chromium`)
-or `PLAYWRIGHT_CHROMIUM_EXECUTABLE` pointing to a testing browser.
+This selects November 10, 2026. Select the same day on the calendar. For the actual
+day use `npm run planner`; for another date use `npm run planner -- --date YYYY-MM-DD`.
+Review/trust the authored project hooks through `/hooks` on first launch. Normal
+launches never bypass hook trust. Skip the optional CLI update prompt to keep the
+tested version; no global upgrade is required by this project.
 
-The earlier terminal harness remains optional: `npm run planner` / `planner:demo`.
-Its native hooks require review/trust in `/hooks`; browser planning does not require
-a separate interactive Codex terminal. The two modes have different enforcement:
-terminal mode constrains helper writes, browser mode forbids AI writes and uses
-an explicit guarded confirmation endpoint.
+In the **native Codex terminal**, say **Good morning** or **Plan my day**:
 
-## Troubleshooting
+1. Codex discovers/reads the morning skill and the two protected sources, progress
+   and prior notes. It asks one or two questions and waits for your answers.
+2. It proposes priorities and time blocks around fixed commitments and lunch.
+3. Ask for a revision or decline: plans and notes must stay unchanged.
+4. Explicitly agree to the displayed proposal. Codex saves the validated plan,
+   then memory. The calendar automatically refreshes within five seconds.
 
-- **Connection needs attention:** install Codex and sign in with ChatGPT once on
-  this computer; click **Check connection again**. API-key billing is disabled.
-- **Generation fails or allowance exhausted:** the page shows the failure, keeps
-  your input and does not pretend to answer or save. Check local Codex connectivity
-  and account availability, then retry. Requests time out after 90 seconds.
-- **Invalid proposal:** no draft is saved; ask for a corrected schedule. Fixed
-  conflicts must remain visible. Sources must both be valid before planning.
-- **No saved plan:** match the selected date, then use **Confirm & save**.
-- **Stale draft:** review the newest proposal. A revision invalidates older IDs.
-- **Server restarted:** start a new conversation. Previously saved plans remain.
+The default webpage is a display and human task interface; it does **not** call a
+model or accept AI plan confirmations. **Terminal check-in** opens a nonmodal guide
+with the date-specific command. Close it for a clean split-screen recording.
 
-See [current evidence](docs/verification.md), [architecture](docs/architecture.md)
-and the [English demo script](docs/demo.md). This Codex adaptation was requested
-by the owner; the original assignment names Claude Code, so product-specific
-compliance is not claimed. Historical reports are under docs/archive.
+## What the harness contains
+
+| Assignment element     | Implementation                                                                       |
+| ---------------------- | ------------------------------------------------------------------------------------ |
+| Two readable sources   | data/sources/academic.json and jobs.json; realistic synthetic week November 9–15.    |
+| Short standing context | AGENTS.md, automatically discovered and explicitly included by the launcher.         |
+| On-demand references   | context/, schemas, sources and the full morning skill.                               |
+| Natural morning skill  | .agents/skills/morning-check-in/SKILL.md, picked from an unnamed natural request.    |
+| Native protection hook | .codex/hooks.json → scripts/protect-data.mjs (PreToolUse).                           |
+| Actual save clock      | Native UserPromptSubmit clock hook; demo date never substitutes for real timestamps. |
+| Cross-day memory       | data/generated/notes.json; only after agreement and a successful plan save.          |
+| Local UI               | Calendar, task progress, deadline filters, career drawer and focus timer.            |
+
+The sample sources are read only to the planning session. The agent may suggest
+changes but cannot move events, edit important data, send messages or apply for jobs.
+
+## Show what loads when
+
+In native Codex, `/status` shows the model, directory, permissions and
+**Agents.md: ../../AGENTS.md**. `/skills` lists the discoverable morning skill;
+`/hooks` shows enabled lifecycle enforcement. Do not manually select the skill
+before the natural-trigger demonstration.
+
+```sh
+npm run planner:context
+```
+
+This uses native `codex debug prompt-input` without a model call and prints a
+redacted summary: short rules present, skill metadata visible, full skill/reference
+bodies not preloaded. It does not dump private account/user context. Claude's
+`/context` is not assumed to be a Codex command; these are the verified substitutes.
+
+## Decisions versus enforcement
+
+Codex decides questions, priority order, time distribution and whether the user
+has agreed. A prompt alone cannot guarantee compliance. Native PreToolUse permits
+only curated reads and whole validated JSON writes through the helper. It denies
+arbitrary commands, patches, MCP/subagent tools and original-data edits. Code checks
+source IDs, fixed events, Chicago dates, task hours, lunch, links and output schemas.
+
+The launcher starts in data/generated under the native workspace sandbox, disables
+MCP/plugins/web/escalation, cleans inherited parent-session permission variables,
+and probes that protected source write-open fails. Shell heredoc temporary files
+stay in data/generated/.planner-tmp; no extra write root or /tmp access is granted.
+An audit record contains decision/reason/command hash, not personal command contents.
+Plan/notes remain contingent on conversational agreement; the hook does not
+independently authenticate human consent. A notes failure is reported separately.
+
+The default browser has no AI plan write endpoint. The human Tasks interface writes
+only data/user/task-state.json, never source JSON. Current completion state is shared
+with the calendar. Sources, generated plans, notes and progress remain local.
+Generated/user data, hook audits and local verification logs are gitignored.
+
+## Verify and demonstrate
+
+```sh
+npm run check              # Types, unit/security tests and production build
+npm run test:e2e           # Default assignment UI; optional browser cases skipped
+npm run planner:context   # Redacted native context evidence, no model usage
+npm run test:safety       # Deterministic real hook process, simulated payload
+npm run test:hook:live    # Actual native tool attempt + hook audit + unchanged hash
+npm run test:terminal:live # Actual skill/questions/refusal/agreement/save in a fixture
+npm run test:assignment:live # Same native flow plus actual calendar auto-refresh
+```
+
+Live tests use your locally signed-in Codex allowance, not API-key billing. They
+inspect their copied hooks and use the hook-trust automation flag **only** inside
+disposable fixtures; sandbox/approval bypass is never used. Logs are under artifacts.
+Normal planner sessions still require native hook trust. For UI integration install
+Playwright Chromium (`npx playwright install chromium`) or set
+`PLAYWRIGHT_CHROMIUM_EXECUTABLE` to your installed testing browser.
+
+Read [the 3–5 minute demo script](docs/demo.md), [current evidence](docs/verification.md),
+[architecture](docs/architecture.md) and [requirement mapping](docs/assignment-audit.md).
+Post the recording in class Slack **#general**, then submit that post's link in
+**Google Classroom**. The PDF does not require a code submission or deployment.
+Recording and submission are performed by the student, not this application.
+
+## UI and troubleshooting
+
+- Calendar opens directly; Day/Week, Today and date navigation show real fixed and
+  confirmed blocks. Overlapping commitments have separate lanes. Phones default
+  to Day. Tasks retains search, dragging, statuses and a 25-minute focus timer.
+- No plan: match browser/terminal dates, review the proposal and explicitly agree.
+- Codex unavailable: check `codex --version` / `codex login status`. This project
+  requires a ChatGPT login; it does not silently switch to API-key billing.
+- Denied tools: use the allowed helper and reviewed hooks; no workarounds. An
+  invalid plan needs correction. Never claim a failed write succeeded.
+- Heredoc failure: use the launcher, which prepares generated-only scratch space.
+  Do not disable the sandbox or grant repository-wide writes.
+- Full/unsafe audit: the hook fails closed. Archive/remove only
+  data/generated/.hook-audit.jsonl from a development terminal, then relaunch.
+- Missing/bad source JSON or failed refresh: the page shows warnings and retains
+  marked last-good data. Restore the original file from a development terminal.
+
+## Optional earlier browser mode
+
+The embedded chat is retained as an explicit opt-in experiment, **not the assignment
+demo**. Start with `LIFEHARNESS_BROWSER_CHAT=1 npm run dev` to enable it. Otherwise
+/api/planner returns 404 and the UI makes no model requests. Its API validations and
+unit tests remain; optional UI tests are skipped in the default suite. To test just
+that retained UI, run `npm run test:e2e:browser` with no other server on port 3100.
+Historical mode-specific evidence remains under docs/archive.

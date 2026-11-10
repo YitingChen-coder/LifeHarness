@@ -80,8 +80,8 @@ export default async function Home({
               aria-label="Explore the calendar workspace"
             >
               <Image
-                src="/calendar-workspace-preview.png"
-                alt="LifeHarness weekly calendar showing classes, interviews and a planning assistant on the right"
+                src="/assignment-calendar-preview.png"
+                alt="LifeHarness local calendar showing classes, interviews and confirmed focus blocks"
                 width={1487}
                 height={1058}
                 priority
@@ -109,8 +109,8 @@ export default async function Home({
             <div>
               <h3>Plan with context.</h3>
               <p>
-                Check in with Codex. Shape a day around your deadlines, classes
-                and goals.
+                Check in with your Codex terminal. Shape a day around deadlines,
+                classes and goals.
               </p>
             </div>
           </article>

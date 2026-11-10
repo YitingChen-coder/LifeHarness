@@ -1,0 +1,18 @@
+{
+  "checkedAt": "2026-11-10T16:22:48.739Z",
+  "mechanism": "native codex debug prompt-input (no model call)",
+  "standingContext": {
+    "file": "AGENTS.md",
+    "bytes": 1652,
+    "present": true
+  },
+  "skill": {
+    "name": "morning-check-in",
+    "metadataVisible": true,
+    "fullBodyPreloaded": false
+  },
+  "references": {
+    "planningBodyPreloaded": false
+  },
+  "privacy": "Full model prompt and private account configuration are not printed."
+}

@@ -18,7 +18,9 @@
     "format:check": "prettier --check src scripts tests context docs AGENTS.md README.md package.json tsconfig.json next.config.ts postcss.config.mjs playwright.config.ts .agents .codex/hooks.json",
     "test:browser:live": "node scripts/verify-browser-live.mjs",
     "planner:context": "node scripts/context-report.mjs",
-    "test:terminal:live": "node scripts/verify-terminal-live.mjs"
+    "test:terminal:live": "node scripts/verify-terminal-live.mjs",
+    "test:assignment:live": "npm run build && node scripts/verify-terminal-live.mjs --with-ui",
+    "test:e2e:browser": "LIFEHARNESS_BROWSER_CHAT=1 npm run build && LIFEHARNESS_BROWSER_CHAT=1 playwright test tests/e2e/planner.spec.ts"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

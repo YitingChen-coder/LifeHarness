@@ -1,102 +1,95 @@
-# Calendar-first verification — November 9, 2026
+# Assignment-native verification — November 10, 2026
 
-- 37 unit/security tests pass, including calendar dates across DST/year boundaries,
-  seven-day saved-plan reads, fixed-event deduplication, preview replacement,
-  overlap lanes and current completion/manual task-state precedence.
-- 16 browser tests pass: nonmodal assistant beside the calendar, real event pixel
-  placement, Day/Week/date navigation, overlap details, in-calendar unsaved preview,
-  refusal and explicit confirmation, immediate confirmed refresh, stale-week recovery,
-  phone Day view and all preserved task/chat regression behavior.
-- TypeScript, production build and formatting pass. Source hashes below are unchanged.
-- Fresh before captures show the former board and blocking modal; current captures
-  show the actual calendar and persistent panel. An event-position arithmetic bug
-  found visually was corrected and covered by a browser position assertion.
-- Independent review found completion-state and selected-day detail inconsistencies.
-  Calendar entries now use task-board precedence and day changes clear unrelated
-  details. Native account bridge and confirmation enforcement remain unchanged.
+The primary flow follows the assignment's browser-left/native-agent-right structure.
+Codex replaces unavailable Claude Code at the owner's request. This is the only
+intended platform substitution, not evidence of instructor approval.
 
-Current captures: images/calendar-workspace.png, images/calendar-assistant.png,
-images/calendar-mobile.png and images/calendar-assistant-mobile.png. Before captures
-are local under artifacts/calendar-before. Visual review is not a claim of full
-accessibility compliance; key labels, keyboard navigation and error states are tested.
+## Actual native session evidence
 
-## Earlier browser-bridge acceptance evidence
+The normal `npm run planner:demo` TUI starts Codex 0.160.0 in data/generated.
+Native `/status` displayed:
 
-### Browser Codex verification — November 9, 2026
+- Model provider: openai; user's configured GPT-6.1-Sol selection preserved.
+- Permissions: Custom (workspace, never).
+- **Agents.md: ../../AGENTS.md**.
 
-Browser planning is now the primary workflow. Prior terminal-only reports are
-archived; their pending connection results do not describe this successful run.
+Native `/hooks` displayed **PreToolUse 1 installed / 1 active** and
+**UserPromptSubmit 1 installed / 1 active**. No normal-launch hook-trust bypass.
+Local raw TUI capture is artifacts/assignment-tui.txt (gitignored); only redacted
+facts are reported here. Claude's /context is not claimed as a Codex command.
 
-## Real model evidence
+`npm run planner:context` uses native debug prompt inspection without model usage:
+AGENTS.md present (1652 bytes); morning skill metadata visible; full morning skill
+and long planning-reference bodies **not preloaded**. The report does not expose
+private user/account prompt context.
 
-The actual Codex app-server bridge, using its existing ChatGPT login and configured
-model, returned a morning question. A real browser at localhost:3000 then sent
-Good morning and received an actual context-aware reply naming Algorithms at
-10:30–11:50. Screenshots in images/browser-planner.png and browser-planner-mobile.png
-show that real conversation, not a mocked response.
+## Actual native morning → calendar integration
 
-`node scripts/verify-browser-live.mjs` completed successfully in a disposable fixture:
+`npm run test:assignment:live` passed using inspected copied hooks and synthetic data
+inside a disposable fixture, with real Codex exec/resume turns and a real browser:
 
-| Step                  | Actual result                                                          |
-| --------------------- | ---------------------------------------------------------------------- |
-| Good morning          | Questions about energy and 09–18 availability around Algorithms.       |
-| Answer                | Validated proposal with 13 time blocks; no plan or notes file created. |
-| Refusal               | Draft discarded; generated plan and memory still absent.               |
-| Revision              | New validated proposal; confirming the old ID was rejected.            |
-| Explicit confirmation | Plan and notes saved with matching actual timestamp.                   |
-| Source integrity      | Both source hashes remained unchanged.                                 |
+| Step                                 | Observed result                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------ |
+| User says only Good morning          | Native command trace reads the morning skill and both sources; asks questions. |
+| Answers and requests proposal        | Timed proposal; neither plan nor notes exists yet.                             |
+| Explicitly says do not save          | Neither plan nor notes is written.                                             |
+| Explicit agreement to displayed plan | Native allowed helper writes the validated dated plan and notes.               |
+| Existing calendar remains open       | It automatically shows native output **1446 ms** after the file write.         |
+| Validation                           | 12 time blocks; generated plan and notes pass shared validation.               |
+| Source integrity                     | Combined protected source hash remains unchanged.                              |
 
-Confirmation timestamp: `2026-11-09T06:29:08.081Z` (00:29 Chicago).
-Machine-readable local evidence: artifacts/browser-live-verification.json (gitignored).
-The script removes its fixture, and no test plan is installed as the owner's real day.
+Actual confirmation timestamp: `2026-11-10T06:33:19.064Z` (00:33 Chicago).
+No generated test plan is installed as the owner's day. The fixture is removed.
+Local evidence: artifacts/terminal-live-verification.json, terminal-*.jsonl and
+native-plan-dashboard.png. The redacted JSON summary and actual native-plan capture
+are retained in docs/evidence and docs/images for review.
 
-An initial native request exposed a strict structured-output schema requirement:
-every property must be required. Optional block sourceId was replaced by a required
-nullable value in the model contract, normalized to omission for saved breaks.
-The corrected real flow above passed. Earlier terminal-mode connection failures
-remain historical facts, not current evidence that browser planning is offline.
+An earlier run exposed shell heredoc temp creation blocked by the sandbox. The fix
+keeps TMPDIR/TMPPREFIX scratch in generated-only .planner-tmp, with a link-safe
+startup check. No broader write root or sandbox bypass was added. A 20KB heredoc
+sandbox probe and the subsequent real plan/notes save both succeeded.
 
-## Automated checks
+## Actual hook enforcement
 
-- 32 unit/security tests pass: original dates/DST/schema/source protection/API and
-  completion behavior, plus browser draft/refusal/revision/idempotent confirmation,
-  invalid model output, same-origin/body restrictions and protocol/login checks.
-- 12 Playwright tests pass, including direct browser conversation, draft preview,
-  refusal, explicit confirmation, state restoration, phone/desktop layout,
-  signed-out UI, input retention on failure and original board features.
-- Browser regression model replies are mocked to avoid account use; real-model
-  coverage is separately recorded above. These are distinct verification paths.
-- TypeScript, production build and formatting pass. Source files retain their
-  original SHA-256 values.
-- Independent review found stale UI callbacks and an unhandled stdin pipe error;
-  date-keyed remount/request generations and a pipe error handler address them.
+`npm run test:hook:live` passed: real native Codex clock read was allowed, an actual
+attempted source overwrite was denied, and source SHA-256 stayed unchanged.
+Independent native hook audit contains an allow record and a deny record with:
 
-## Enforcement and limits
+`Shell operators, substitutions and arbitrary commands are blocked`
 
-The browser AI thread is read only with shell/MCP/plugins/subagents/web disabled.
-The host rejects interactive tool requests and API-key authentication. A guarded
-same-origin confirmation endpoint accepts only a server-held draft ID, validates
-again and writes plan then notes atomically per file. Plain model text cannot save.
+This is not inferred merely from model refusal text. The CLI stream does not emit a
+command_execution item for the rejected call, so the test checks actual hook audit
+records, tool IDs and unchanged source bytes. An audit failure blocks execution.
+Only inspected fixture hooks use the automation hook-trust flag; normal launches
+require trust, and approval/sandbox bypass is never used.
 
-No claim is made that this chat and the local account share a single usage pool.
-The bridge uses the local ChatGPT-authenticated Codex allowance. Model messages
-consume account usage; opening the panel, confirming or discarding does not.
-Conversation drafts expire after idle timeout/server restart; saved files remain.
+## Default browser and regression coverage
 
-Native terminal hook model-integration was not rerun for this change. Browser mode
-does not use an AI file-write hook as its primary saving boundary. The owner knowingly
-chose Codex despite the original assignment's Claude Code requirement.
+- 40 unit/security tests pass: schemas, source references, Chicago/DST dates, safe
+  paths/links, completion precedence, APIs, launch/session isolation, bounded scratch
+  and default-disabled embedded model/plan mutation endpoints.
+- Default browser suite: **12 passed, 5 explicitly skipped**. Skipped cases belong
+  to the earlier opt-in embedded-browser flow, not the assignment's native workflow.
+- The default page makes zero /api/planner requests. Both embedded GET/POST return 404. The optional guide contains the selected-date native command and leaves the
+  calendar usable. Calendar refresh, navigation, tasks, dragging, timers, errors and
+  card-layout geometry remain covered.
+- Optional browser UI was separately opt-in tested: 4 passed. These do not count
+  as native assignment evidence; the default five skipped cases remain explicit.
+- TypeScript, production build and formatting pass. No CLAUDE.md is introduced.
+- Independent review found the old browser demo instructions; README/demo/architecture
+  were rewritten for native terminal use. No additional important security issue was
+  reported in default API isolation, native policy or temporary directory handling.
 
-## Protected hashes
+Earlier browser-primary evidence is under docs/archive and is not offered as proof
+of native skill selection or native write enforcement.
+
+## Student deliverables still outstanding
+
+The student must record the 3–5 minute demo, post it in Slack #general and submit
+that post's link in Google Classroom. No recording or external submission is marked
+done. Code upload/deployment is not required by the assignment PDF.
+
+## Protected source hashes
 
 - academic.json: `2705c5366bf93c6b2c1665846eed64dade7ccc65984e2e6f692aaf45efc39463`
 - jobs.json: `ddac94ecf6b2da0fdfed1d1336f5a03f6b0d888e8be6e40eaeb8735a55f21bbe`
-
-## Task-card clipping regression
-
-Task cards were shrinking to about 24px inside the fixed-height desktop list,
-while their content needed about 200px. Cards now retain their natural height
-and the list scrolls. Removed the zero minimum-height override, corrected stale
-calendar-layout selectors to the actual board/list classes, and let narrow action
-rows wrap. A geometry regression checks all 12 cards and action controls at widths
-1440, 1024, 900, 768, 760, 390 and 320px, plus reaching the final task by scrolling.

@@ -1,0 +1,31 @@
+{
+  "checkedAt": "2026-11-10T06:32:43.513Z",
+  "mode": "actual native Codex exec/resume, inspected isolated fixture",
+  "steps": [
+    {
+      "step": "Good morning automatically loads morning skill and both sources; asks questions without saving",
+      "passed": true
+    },
+    {
+      "step": "Answers produce a proposal, no plan or notes saved",
+      "passed": true
+    },
+    {
+      "step": "Explicit refusal leaves plan and notes unchanged",
+      "passed": true
+    },
+    {
+      "step": "Existing browser calendar automatically displays actual native CLI output",
+      "passed": true,
+      "refreshMs": 1446
+    },
+    {
+      "step": "Explicit agreement lets native Codex save validated plan and notes through the actual hook",
+      "passed": true,
+      "confirmedAt": "2026-11-10T06:33:19.064Z",
+      "blocks": 12,
+      "sourceHashesUnchanged": true,
+      "hookAllowRecords": 9
+    }
+  ]
+}

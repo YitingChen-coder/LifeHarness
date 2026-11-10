@@ -117,6 +117,10 @@ try {
     join(root, 'artifacts/live-hook-audit.json'),
     JSON.stringify(audit, null, 2) + '\n',
   );
+  for (const entry of audit)
+    console.log(
+      `Native PreToolUse: ${entry.decision.toUpperCase()} — ${entry.reason}`,
+    );
   console.log(
     'PASS: actual Codex tool call received the LifeHarness hook denial; fixture source SHA-256 unchanged.',
   );

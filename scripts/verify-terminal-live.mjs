@@ -9,12 +9,13 @@ import {
   readFileSync,
   writeFileSync,
   existsSync,
+  statSync,
   rmSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import assert from 'node:assert/strict';
 import { tsImport } from 'tsx/esm/api';
@@ -24,6 +25,10 @@ import {
   sessionEnvironment,
   prepareNativeWorkspace,
 } from './codex-session.mjs';
+const withUi = process.argv.includes('--with-ui');
+if (process.argv.slice(2).some((arg) => arg !== '--with-ui'))
+  throw new Error('Usage: verify-terminal-live [--with-ui]');
+let uiServer, browser, page;
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const fixture = realpathSync(
   mkdtempSync(join(tmpdir(), 'lifeharness-native-checkin-')),
@@ -159,6 +164,63 @@ try {
     passed: true,
   });
   save();
+  if (withUi) {
+    assert.ok(
+      existsSync(join(root, '.next/BUILD_ID')),
+      'Build the app before the UI integration test',
+    );
+    cpSync(join(root, 'package.json'), join(fixture, 'package.json'));
+    symlinkSync(join(root, '.next'), join(fixture, '.next'));
+    const net = await import('node:net');
+    const probe = net.createServer();
+    await new Promise((resolve) => probe.listen(0, '127.0.0.1', resolve));
+    const port = probe.address().port;
+    await new Promise((resolve) => probe.close(resolve));
+    uiServer = spawn(
+      process.execPath,
+      [
+        join(root, 'node_modules/next/dist/bin/next'),
+        'start',
+        '--hostname',
+        '127.0.0.1',
+        '--port',
+        String(port),
+      ],
+      { cwd: fixture, env: process.env, stdio: 'ignore' },
+    );
+    const url = `http://127.0.0.1:${port}`;
+    let ready = false;
+    for (let i = 0; i < 60; i++) {
+      try {
+        const response = await fetch(url + '/api/dashboard?date=2026-11-10');
+        if (response.ok) {
+          ready = true;
+          break;
+        }
+      } catch {}
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+    assert.ok(ready, 'Isolated dashboard did not start');
+    const { chromium } = await import('@playwright/test');
+    browser = await chromium.launch({
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || undefined,
+    });
+    page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+    await page.goto(url + '/board?date=2026-11-10');
+    await page.locator('.calendar-event').first().waitFor();
+    assert.equal(await page.locator('.plan-state.confirmed').count(), 0);
+    await page.evaluate(() => {
+      window.__assignmentSeenAt = null;
+      const observer = new MutationObserver(() => {
+        if (
+          window.__assignmentSeenAt === null &&
+          document.querySelector('.plan-state.confirmed')
+        )
+          window.__assignmentSeenAt = Date.now();
+      });
+      observer.observe(document.body, { childList: true, subtree: true });
+    });
+  }
   run(
     'confirmation',
     'I explicitly confirm the most recently displayed full plan for November 10. Save that agreed plan and update the notes now using the allowed helper, then report actual tool success.',
@@ -185,6 +247,27 @@ try {
     );
   const plan = JSON.parse(readFileSync(generated('2026-11-10.json'), 'utf8'));
   assert.equal(sourceHash(), before);
+  if (withUi) {
+    await page.locator('.plan-state.confirmed').waitFor({ timeout: 6000 });
+    const seen = await page.evaluate(() => window.__assignmentSeenAt);
+    const refreshMs = seen - statSync(generated('2026-11-10.json')).mtimeMs;
+    assert.ok(
+      refreshMs >= 0 && refreshMs <= 5000,
+      `Dashboard refresh took ${refreshMs} ms`,
+    );
+    assert.equal(
+      await page.locator('.calendar-event.task').count(),
+      plan.blocks.filter((block) => block.kind === 'task').length,
+    );
+    await page.screenshot({
+      path: join(root, 'artifacts/native-plan-dashboard.png'),
+    });
+    evidence.steps.push({
+      step: 'Existing browser calendar automatically displays actual native CLI output',
+      passed: true,
+      refreshMs: Math.round(refreshMs),
+    });
+  }
   const audit = readFileSync(generated('.hook-audit.jsonl'), 'utf8')
     .trim()
     .split('\n')
@@ -206,5 +289,16 @@ try {
   process.exitCode = 1;
 } finally {
   save();
+  await browser?.close();
+  if (uiServer) {
+    uiServer.kill('SIGTERM');
+    await new Promise((resolve) => {
+      if (uiServer.exitCode !== null) resolve();
+      else {
+        uiServer.once('exit', resolve);
+        setTimeout(resolve, 1000);
+      }
+    });
+  }
   rmSync(fixture, { recursive: true, force: true });
 }
