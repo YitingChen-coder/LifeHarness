@@ -17,6 +17,8 @@ export function sessionEnvironment(base = process.env) {
 export function nativePolicy(cwd, context) {
   return [
     '--no-daemon',
+    '-c',
+    'check_for_update_on_startup=false',
     '--cd',
     cwd,
     '--sandbox',

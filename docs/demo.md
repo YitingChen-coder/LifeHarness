@@ -8,7 +8,7 @@ explicitly substituted for unavailable Claude Code. Do not use embedded browser 
 
 - Run `npm run dev`; open the calendar and select November 10, 2026 (Sample day).
 - In the right terminal run `npm run planner:demo`. Review/trust the authored
-  project hooks in `/hooks` if asked. Skip the optional global update prompt.
+  project hooks in `/hooks` if asked. The launcher skips startup updates.
 - Confirm model login works and no older test is running. Inspect sources only in
   a separate development terminal; keep them unchanged. Use synthetic data only.
 - Preview `npm run planner:context` and `npm run test:hook:live` beforehand. The live

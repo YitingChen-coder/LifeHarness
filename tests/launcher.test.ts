@@ -16,6 +16,7 @@ test('launcher only accepts a validated explicit date and emits a restricted con
   assert.match(config.context, /LifeHarness daily planner/);
   assert.match(config.context, /2026-11-10/);
   assert.equal(config.args.includes('--no-daemon'), true);
+  assert.ok(config.args.includes('check_for_update_on_startup=false'));
   assert.equal(config.args.includes('workspace-write'), true);
   assert.ok(config.args.includes('features.plugins=false'));
   assert.ok(config.args.includes('forced_login_method="chatgpt"'));

@@ -30,8 +30,9 @@ npm run planner:demo
 This selects November 10, 2026. Select the same day on the calendar. For the actual
 day use `npm run planner`; for another date use `npm run planner -- --date YYYY-MM-DD`.
 Review/trust the authored project hooks through `/hooks` on first launch. Normal
-launches never bypass hook trust. Skip the optional CLI update prompt to keep the
-tested version; no global upgrade is required by this project.
+launches never bypass hook trust. This project disables startup update checks for
+its planner session and uses the installed tested CLI; it does not change global
+update or proxy settings.
 
 In the **native Codex terminal**, say **Good morning** or **Plan my day**:
 
