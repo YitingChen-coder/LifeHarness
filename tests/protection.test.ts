@@ -187,3 +187,19 @@ test('every user prompt receives a fresh actual timestamp without model command 
   assert.ok(stamp);
   assert.ok(Math.abs(Date.now() - Date.parse(stamp)) < 5000);
 });
+test('allowed native hook calls return no decision rather than unsupported bare allow', () => {
+  const result = spawnSync(process.execPath, ['scripts/protect-data.mjs'], {
+    input: JSON.stringify({
+      hook_event_name: 'PreToolUse',
+      tool_name: 'Bash',
+      cwd: resolve('data/generated'),
+      tool_input: {
+        command: "node '../../scripts/planner-files.mjs' read clock",
+      },
+    }),
+    encoding: 'utf8',
+    env: { ...process.env, LIFEHARNESS_HOOK_AUDIT: '0' },
+  });
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(JSON.parse(result.stdout), {});
+});

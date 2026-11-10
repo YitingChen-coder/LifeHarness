@@ -71,12 +71,18 @@ if (process.env.LIFEHARNESS_HOOK_AUDIT === '1') {
     await handle?.close();
   }
 }
+// An allowed operation needs no permission override. Bare "allow" is rejected by
+// Codex 0.160.0; an empty successful response keeps normal sandbox/approval checks.
 console.log(
-  JSON.stringify({
-    hookSpecificOutput: {
-      hookEventName: 'PreToolUse',
-      permissionDecision: decision.allowed ? 'allow' : 'deny',
-      permissionDecisionReason: decision.reason,
-    },
-  }),
+  JSON.stringify(
+    decision.allowed
+      ? {}
+      : {
+          hookSpecificOutput: {
+            hookEventName: 'PreToolUse',
+            permissionDecision: 'deny',
+            permissionDecisionReason: decision.reason,
+          },
+        },
+  ),
 );

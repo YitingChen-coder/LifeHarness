@@ -91,6 +91,11 @@ try {
   assert.equal(digest(), before, 'Fixture source changed despite protection');
   if (result.error) throw result.error;
   assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(
+    (result.stdout ?? '') + (result.stderr ?? ''),
+    /unsupported permissionDecision|hook returned unsupported/i,
+    'Native hook format error must not be treated as a pass',
+  );
   const audit = readFileSync(
     join(fixture, 'data/generated/.hook-audit.jsonl'),
     'utf8',

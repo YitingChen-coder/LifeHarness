@@ -105,6 +105,11 @@ try {
     );
     if (result.error) throw result.error;
     assert.equal(result.status, 0, result.stderr);
+    assert.doesNotMatch(
+      (result.stdout ?? '') + (result.stderr ?? ''),
+      /unsupported permissionDecision|hook returned unsupported/i,
+      'Native hook format error must not be treated as a pass',
+    );
     const events = result.stdout
       .trim()
       .split('\n')
